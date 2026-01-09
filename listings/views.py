@@ -17,10 +17,19 @@ from rest_framework.parsers import MultiPartParser, FormParser
 # This view handles:
 # 1. GET requests (List all houses)
 # 2. POST requests (Add a new house - we'll restrict this to landlords later)
-class PropertyListCreateView(generics.ListCreateAPIView):
-    queryset = Property.objects.filter(is_available=True) # Only show available houses
-    serializer_class = PropertySerializer
+# listings/views.py
 
+class PropertyListCreateView(generics.ListCreateAPIView):
+    queryset = Property.objects.all()
+    serializer_class = PropertySerializer
+    # Ensure only logged-in users can create houses (Guests can only read)
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly] 
+
+    def perform_create(self, serializer):
+        # --- THIS IS THE MISSING PIECE ---
+        # When creating a house, automatically set the 'landlord' field 
+        # to the user sending the request.
+        serializer.save(landlord=self.request.user)
 # This view handles:
 # 1. GET specific house (Retrieve)
 # 2. PUT/PATCH (Update)

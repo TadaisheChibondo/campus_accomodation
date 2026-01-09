@@ -116,7 +116,7 @@ function About() {
             </p>
 
             <p style={{ lineHeight: "1.6", marginBottom: "20px" }}>
-              Hi, I'm Tadaishe. I am a 20-year-old Computer Science student
+              Hi, I'm Tadaishe. I am a 21-year-old Computer Science student
               passionate about building software that solves real-world
               problems.
             </p>
@@ -134,6 +134,39 @@ function About() {
               <span style={pillStyle}>🐍 Python (Django)</span>
               <span style={pillStyle}>🐘 PostgreSQL</span>
               <span style={pillStyle}>☁️ Cloud Architecture</span>
+            </div>
+            <h3>Connect with Me</h3>
+            <div style={{ display: "flex", gap: "20px" }}>
+              <a
+                href="https://www.linkedin.com/in/tadaishe-chibondo-915247349?utm_source=share_via&utm_content=profile&utm_medium=member_android"
+                style={{
+                  color: "#2563eb",
+                  textDecoration: "none",
+                  fontWeight: "bold",
+                }}
+              >
+                LinkedIn
+              </a>
+              <a
+                href="https://github.com/TadaisheChibondo"
+                style={{
+                  color: "#2563eb",
+                  textDecoration: "none",
+                  fontWeight: "bold",
+                }}
+              >
+                GitHub
+              </a>
+              <a
+                href="https://tadaishe-portfolio.onrender.com/"
+                style={{
+                  color: "#2563eb",
+                  textDecoration: "none",
+                  fontWeight: "bold",
+                }}
+              >
+                Portfolio
+              </a>
             </div>
           </div>
         </div>
