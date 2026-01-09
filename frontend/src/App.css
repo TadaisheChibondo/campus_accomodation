@@ -1,0 +1,83 @@
+/* 1. Global Reset */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #f4f6f8; /* Light grey background for the whole app */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+}
+
+/* 2. The Container for Page Content */
+.main-content {
+  max-width: 1200px; /* Limits width on big screens so lines aren't too long */
+  margin: 0 auto; /* Centers the container */
+  padding: 20px;
+  min-height: 80vh;
+}
+
+/* 3. The Responsive Grid */
+.property-grid {
+  display: grid;
+  /* This MAGIC line makes it responsive:
+     - On mobile (< 300px space), it does 1 column.
+     - On laptop, it fits as many 300px cards as possible (usually 3 or 4).
+  */
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 30px;
+  margin-top: 20px;
+}
+
+/* 4. Property Card Styling */
+.property-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid #eaeaea;
+}
+
+.property-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.property-image {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.property-info {
+  padding: 20px;
+}
+
+/* 5. Center the Login/Register Pages */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 70vh; /* Takes up most of the screen height */
+}
+
+.auth-box {
+  background: white;
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px; /* Prevents it from getting too wide on desktop */
+}
+
+/* Input styling */
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 16px;
+  box-sizing: border-box; /* Ensures padding doesn't break width */
+}
