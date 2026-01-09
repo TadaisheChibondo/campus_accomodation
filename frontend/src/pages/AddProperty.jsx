@@ -31,16 +31,29 @@ function AddProperty() {
     }
   };
 
+  // frontend/src/pages/AddProperty.jsx
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     const token = localStorage.getItem("access_token");
 
+    // --- NEW CODE HERE ---
+    // Create a cleaned-up copy of the data.
+    // If lat/lon are empty strings, convert them to null so the backend accepts them.
+    const dataToSend = {
+      ...formData,
+      latitude: formData.latitude ? formData.latitude : null,
+      longitude: formData.longitude ? formData.longitude : null,
+    };
+    // ---------------------
+
     try {
       // STEP 1: Create the Property
+      // IMPORTANT: We use 'dataToSend' here, not 'formData'
       const propertyRes = await axios.post(
         "https://campus-acc-backend.onrender.com/api/properties/",
-        formData,
+        dataToSend,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -72,8 +85,12 @@ function AddProperty() {
       alert("Property and Images Uploaded Successfully!");
       navigate("/");
     } catch (error) {
-      console.error(error);
-      alert("Failed to upload. Make sure you are logged in.");
+      // If it fails again, check the console for the specific error message from the server.
+      console.error(
+        "Upload failed:",
+        error.response ? error.response.data : error.message
+      );
+      alert("Failed to upload. Please check your form data.");
     } finally {
       setLoading(false);
     }
