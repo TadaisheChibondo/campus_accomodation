@@ -8,10 +8,12 @@ function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get("http://127.0.0.1:8000/api/properties/").then((res) => {
-      setProperties(res.data);
-      setLoading(false);
-    });
+    axios
+      .get("https://campus-acc-backend.onrender.com/api/properties/")
+      .then((res) => {
+        setProperties(res.data);
+        setLoading(false);
+      });
   }, []);
 
   if (loading) return <h2>Loading...</h2>;

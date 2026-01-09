@@ -39,7 +39,7 @@ function AddProperty() {
     try {
       // STEP 1: Create the Property
       const propertyRes = await axios.post(
-        "http://127.0.0.1:8000/api/properties/",
+        "https://campus-acc-backend.onrender.com/api/properties/",
         formData,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -57,7 +57,7 @@ function AddProperty() {
           imageData.append("image", images[i]);
 
           await axios.post(
-            "http://127.0.0.1:8000/api/upload-image/",
+            "https://campus-acc-backend.onrender.com/api/upload-image/",
             imageData,
             {
               headers: {

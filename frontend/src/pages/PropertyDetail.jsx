@@ -34,7 +34,7 @@ function PropertyDetail() {
 
   const fetchProperty = () => {
     axios
-      .get(`http://127.0.0.1:8000/api/properties/${id}/`)
+      .get(`https://campus-acc-backend.onrender.com/api/properties/${id}/`)
       .then((res) => {
         setProperty(res.data);
         if (res.data.latitude && res.data.longitude) {
@@ -68,7 +68,7 @@ function PropertyDetail() {
 
     axios
       .post(
-        `http://127.0.0.1:8000/api/properties/${id}/review/`,
+        `https://campus-acc-backend.onrender.com/api/properties/${id}/review/`,
         {
           rating: rating,
           comment: comment,

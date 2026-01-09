@@ -13,7 +13,7 @@ function Register() {
 
     // 1. First, try to register the user
     axios
-      .post("http://127.0.0.1:8000/api/register/", {
+      .post("https://campus-acc-backend.onrender.com/api/register/", {
         username,
         password,
         email,
@@ -23,10 +23,13 @@ function Register() {
 
         // 2. IF registration works, immediately try to log in
         // We use the same 'username' and 'password' variables from the form state
-        return axios.post("http://127.0.0.1:8000/api/token/", {
-          username: username,
-          password: password,
-        });
+        return axios.post(
+          "https://campus-acc-backend.onrender.com/api/token/",
+          {
+            username: username,
+            password: password,
+          }
+        );
       })
       .then((res) => {
         // 3. IF login works, save the token just like we do in the Login page

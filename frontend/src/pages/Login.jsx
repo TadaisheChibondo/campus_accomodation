@@ -11,7 +11,10 @@ function Login() {
   const handleLogin = (e) => {
     e.preventDefault();
     axios
-      .post("http://127.0.0.1:8000/api/token/", { username, password })
+      .post("https://campus-acc-backend.onrender.com/api/token/", {
+        username,
+        password,
+      })
       .then((res) => {
         localStorage.setItem("access_token", res.data.access);
         navigate("/");
