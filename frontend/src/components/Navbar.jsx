@@ -15,7 +15,6 @@ function Navbar() {
 
   return (
     <nav style={{ backgroundColor: "white", borderBottom: "1px solid #eee" }}>
-      {/* Inner container limits width to match the rest of the app */}
       <div
         style={{
           maxWidth: "1200px",
@@ -26,7 +25,6 @@ function Navbar() {
           alignItems: "center",
         }}
       >
-        {/* ... Keep your existing Logo and Links code here ... */}
         <Link
           to="/"
           style={{
@@ -43,7 +41,19 @@ function Navbar() {
           className="nav-links"
           style={{ display: "flex", gap: "15px", alignItems: "center" }}
         >
-          {/* ... (Your existing isAuthenticated logic) ... */}
+          {/* --- MOVED HERE: Visible to everyone --- */}
+          <Link
+            to="/about"
+            style={{
+              textDecoration: "none",
+              color: "#555",
+              fontWeight: "500",
+            }}
+          >
+            About Us
+          </Link>
+
+          {/* --- CONDITIONAL LINKS --- */}
           {isAuthenticated ? (
             <>
               <Link to="/add-property">
@@ -86,17 +96,6 @@ function Navbar() {
                 }}
               >
                 Login
-              </Link>
-              <Link
-                to="/about"
-                style={{
-                  textDecoration: "none",
-                  color: "#555",
-                  fontWeight: "500",
-                  marginRight: "15px",
-                }}
-              >
-                About Us
               </Link>
 
               <Link to="/register">
