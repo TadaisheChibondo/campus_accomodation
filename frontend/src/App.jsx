@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AddProperty from "./pages/AddProperty"; // Don't forget this!
 import Navbar from "./components/Navbar";
+import About from "./pages/About";
 import "./App.css";
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/add-property" element={<AddProperty />} />
+            <Route path="/about" element={<About />} />
           </Routes>
         </div>
       </div>

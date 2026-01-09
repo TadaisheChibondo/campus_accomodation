@@ -87,6 +87,18 @@ function Navbar() {
               >
                 Login
               </Link>
+              <Link
+                to="/about"
+                style={{
+                  textDecoration: "none",
+                  color: "#555",
+                  fontWeight: "500",
+                  marginRight: "15px",
+                }}
+              >
+                About Us
+              </Link>
+
               <Link to="/register">
                 <button
                   style={{
