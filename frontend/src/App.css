@@ -81,3 +81,99 @@ textarea {
   font-size: 16px;
   box-sizing: border-box; /* Ensures padding doesn't break width */
 }
+
+/* --- NEW NAVBAR STYLES --- */
+
+/* 1. Base Styles (Desktop) */
+.navbar {
+  background-color: white;
+  border-bottom: 1px solid #eee;
+}
+
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 15px 20px;
+  display: flex; /* Keeps them side-by-side on desktop */
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-logo {
+  text-decoration: none;
+  color: #333;
+  font-weight: bold;
+  font-size: 1.5em;
+}
+
+.nav-links {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #555;
+  font-weight: 500;
+}
+
+/* Button Styles (recreating your inline buttons) */
+.btn-primary {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: #3498db;
+  border: 2px solid #3498db;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-danger {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* --- THE MOBILE FIX (Screens smaller than 768px) --- */
+@media (max-width: 768px) {
+  /* 1. Stack the Navbar */
+  .navbar-container {
+    flex-direction: column; /* Stack Top-to-Bottom */
+    gap: 1rem;
+  }
+
+  .nav-links {
+    width: 100%;
+    justify-content: center; /* Center the buttons */
+    flex-wrap: wrap; /* Let buttons wrap to next line if needed */
+  }
+
+  /* 2. Shrink that Giant Hero Text */
+  /* Note: Assuming your purple box uses h1. If it has a specific class, add it here. */
+  h1 {
+    font-size: 2rem !important; /* Force it to shrink */
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  /* 3. Add breathing room to the sides */
+  .main-content,
+  .auth-box {
+    padding-left: 15px;
+    padding-right: 15px;
+    width: 100%;
+  }
+}

@@ -14,103 +14,34 @@ function Navbar() {
   };
 
   return (
-    <nav style={{ backgroundColor: "white", borderBottom: "1px solid #eee" }}>
-      <div
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-          padding: "15px 20px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <Link
-          to="/"
-          style={{
-            textDecoration: "none",
-            color: "#333",
-            fontWeight: "bold",
-            fontSize: "1.5em",
-          }}
-        >
+    <nav className="navbar">
+      <div className="navbar-container">
+        <Link to="/" className="navbar-logo">
           🎓 Campus Accommodation
         </Link>
 
-        <div
-          className="nav-links"
-          style={{ display: "flex", gap: "15px", alignItems: "center" }}
-        >
-          {/* --- MOVED HERE: Visible to everyone --- */}
-          <Link
-            to="/about"
-            style={{
-              textDecoration: "none",
-              color: "#555",
-              fontWeight: "500",
-            }}
-          >
+        {/* kept your existing logic, just cleaner tags */}
+        <div className="nav-links">
+          <Link to="/about" className="nav-link">
             About Us
           </Link>
 
-          {/* --- CONDITIONAL LINKS --- */}
           {isAuthenticated ? (
             <>
               <Link to="/add-property">
-                <button
-                  style={{
-                    backgroundColor: "transparent",
-                    color: "#3498db",
-                    border: "2px solid #3498db",
-                    padding: "8px 15px",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    fontWeight: "bold",
-                  }}
-                >
-                  + List Your Home
-                </button>
+                <button className="btn-outline">+ List Your Home</button>
               </Link>
-              <button
-                onClick={handleLogout}
-                style={{
-                  backgroundColor: "#e74c3c",
-                  color: "white",
-                  border: "none",
-                  padding: "10px 15px",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-              >
+              <button onClick={handleLogout} className="btn-danger">
                 Logout
               </button>
             </>
           ) : (
             <>
-              <Link
-                to="/login"
-                style={{
-                  textDecoration: "none",
-                  color: "#555",
-                  fontWeight: "500",
-                }}
-              >
+              <Link to="/login" className="nav-link">
                 Login
               </Link>
-
               <Link to="/register">
-                <button
-                  style={{
-                    backgroundColor: "#3498db",
-                    color: "white",
-                    border: "none",
-                    padding: "10px 15px",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                  }}
-                >
-                  Register
-                </button>
+                <button className="btn-primary">Register</button>
               </Link>
             </>
           )}
