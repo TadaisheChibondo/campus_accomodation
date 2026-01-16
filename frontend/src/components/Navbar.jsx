@@ -66,13 +66,18 @@ const Navbar = () => {
                   My Requests
                 </Link>
                 <Link
-                  to="/add-property"
+                  to="/dashboard"
+                  className="text-gray-600 hover:text-primary font-medium transition-colors"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  to="/about"
                   className="flex items-center gap-2 text-gray-600 hover:text-primary font-medium transition-colors"
                 >
                   <PlusCircle size={18} />
-                  List Property
+                  About
                 </Link>
-
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-2 text-red-500 hover:text-red-700 font-medium transition-colors"

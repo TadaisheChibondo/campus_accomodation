@@ -8,6 +8,7 @@ import Register from "./pages/Register";
 import AddProperty from "./pages/AddProperty";
 import About from "./pages/About";
 import MyBookings from "./pages/MyBookings";
+import LandlordDashboard from "./pages/LandlordDashboard";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/listings" element={<Listings />} />
           <Route path="/my-bookings" element={<MyBookings />} />
+          <Route path="/dashboard" element={<LandlordDashboard />} />
         </Routes>
       </Layout>
     </Router>
