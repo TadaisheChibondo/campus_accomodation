@@ -158,7 +158,7 @@ function About() {
                 GitHub
               </a>
               <a
-                href="https://tadaishe-portfolio.onrender.com/"
+                href="https://tadaishe-chibondo.vercel.app/"
                 style={{
                   color: "#2563eb",
                   textDecoration: "none",
