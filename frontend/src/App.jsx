@@ -1,32 +1,32 @@
+import Listings from "./pages/Listings";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Layout from "./components/Layout"; // Import our new "Shell"
 import Home from "./pages/Home";
 import PropertyDetail from "./pages/PropertyDetail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import AddProperty from "./pages/AddProperty"; // Don't forget this!
-import Navbar from "./components/Navbar";
+import AddProperty from "./pages/AddProperty";
 import About from "./pages/About";
-import "./App.css";
+import MyBookings from "./pages/MyBookings";
 
 function App() {
   return (
     <Router>
-      <div className="app-wrapper">
-        {/* Navbar is now OUTSIDE the main content container so it can be full width */}
-        <Navbar />
-
-        {/* This container will center the rest of the pages */}
-        <div className="main-content">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/property/:id" element={<PropertyDetail />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/add-property" element={<AddProperty />} />
-            <Route path="/about" element={<About />} />
-          </Routes>
-        </div>
-      </div>
+      {/* The Layout wraps all routes. 
+        It automatically adds the Navbar and handles the padding/spacing.
+      */}
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/property/:id" element={<PropertyDetail />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/add-property" element={<AddProperty />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/listings" element={<Listings />} />
+          <Route path="/my-bookings" element={<MyBookings />} />
+        </Routes>
+      </Layout>
     </Router>
   );
 }
