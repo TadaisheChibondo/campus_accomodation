@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Property, PropertyImage, Review
+from .models import Property, PropertyImage, Review, Booking
 from django.contrib.auth.models import User
 
 class UserSerializer(serializers.ModelSerializer):
@@ -49,3 +49,14 @@ class PropertySerializer(serializers.ModelSerializer):
             'reviews', 'created_at' # <--- Don't forget to add 'reviews' here!
         ]
  
+
+class BookingSerializer(serializers.ModelSerializer):
+    # Read-only fields so the frontend doesn't need to send them (and can't fake them)
+    student_name = serializers.ReadOnlyField(source='student.username')
+    property_title = serializers.ReadOnlyField(source='property.title')
+    status = serializers.ReadOnlyField() 
+
+    class Meta:
+        model = Booking
+        fields = ['id', 'property', 'property_title', 'student', 'student_name', 'move_in_date', 'message', 'status', 'created_at']
+        read_only_fields = ['student', 'created_at'] # Auto-filled by backend

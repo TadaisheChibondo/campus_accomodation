@@ -48,3 +48,23 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.rating} stars for {self.property.title}"
+    
+
+# ... your existing Property model is here ...
+
+class Booking(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+    ]
+
+    property = models.ForeignKey('Property', on_delete=models.CASCADE, related_name='bookings')
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='my_bookings')
+    move_in_date = models.DateField()
+    message = models.TextField(blank=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.student.username} -> {self.property.title} ({self.status})"

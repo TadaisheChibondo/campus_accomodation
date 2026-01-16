@@ -84,12 +84,41 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 # backend/settings.py
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         default='postgresql://postgres:YOUR_LOCAL_PASSWORD@localhost/campus_db',
+#         conn_max_age=600
+#     )
+# }
+
+
+
+# ... (keep other settings) ...
+
+# DEFAULT: Use SQLite locally (No passwords, no installation needed)
 DATABASES = {
-    'default': dj_database_url.config(
-        default='postgresql://postgres:YOUR_LOCAL_PASSWORD@localhost/campus_db',
-        conn_max_age=600
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
+
+# OVERRIDE: If we are on Render, use the real PostgreSQL database
+# Render automatically sets the 'DATABASE_URL' environment variable
+database_url = os.environ.get("DATABASE_URL")
+if database_url:
+    DATABASES["default"] = dj_database_url.parse(database_url)
+
+
+
+
+
+
+
+
+
+
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
