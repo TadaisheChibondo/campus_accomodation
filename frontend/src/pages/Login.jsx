@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
-import { User, Lock, ArrowRight } from "lucide-react";
+import { User, Lock, ArrowRight, Loader2 } from "lucide-react";
 
 // Image for the right side
 const LOGIN_IMAGE =
@@ -14,33 +14,54 @@ function Login() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    axios
-      .post("https://campus-acc-backend.onrender.com/api/token/", {
-        username,
-        password,
-      })
-      .then((res) => {
-        // 1. Save Token
-        localStorage.setItem("access_token", res.data.access);
+    try {
+      // 1. Get Token
+      const res = await axios.post(
+        "https://campus-acc-backend.onrender.com/api/token/",
+        {
+          username,
+          password,
+        }
+      );
 
-        // 2. Save Username (So Navbar can display it)
-        localStorage.setItem("username", username);
+      const accessToken = res.data.access;
+      localStorage.setItem("access_token", accessToken);
+      localStorage.setItem("refresh_token", res.data.refresh);
+      localStorage.setItem("username", username);
 
-        // 3. Redirect
+      // 2. Fetch User Role (Needed to know where to send them)
+      let role = "student";
+      try {
+        const userRes = await axios.get(
+          "https://campus-acc-backend.onrender.com/api/user-info/",
+          {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }
+        );
+        role = userRes.data.role;
+        localStorage.setItem("role", role);
+      } catch (roleErr) {
+        console.error("Failed to fetch role, defaulting to student.", roleErr);
+        localStorage.setItem("role", "student");
+      }
+
+      // 3. Smart Redirect
+      if (role === "landlord") {
+        navigate("/dashboard");
+      } else {
         navigate("/");
-      })
-      .catch((err) => {
-        console.error(err);
-        setError("Invalid username or password. Please try again.");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Invalid username or password.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -64,40 +85,40 @@ function Login() {
           )}
 
           <form onSubmit={handleLogin} className="space-y-6">
-            {/* Username Field */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Username
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User size={20} className="text-gray-400" />
-                </div>
+                <User
+                  size={20}
+                  className="absolute left-3 top-3.5 text-gray-400"
+                />
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary outline-none"
                   placeholder="Enter your username"
                   required
                 />
               </div>
             </div>
 
-            {/* Password Field */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock size={20} className="text-gray-400" />
-                </div>
+                <Lock
+                  size={20}
+                  className="absolute left-3 top-3.5 text-gray-400"
+                />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary outline-none"
                   placeholder="••••••••"
                   required
                 />
@@ -113,8 +134,13 @@ function Login() {
                   : "bg-primary hover:bg-blue-700 shadow-blue-500/30"
               }`}
             >
-              {loading ? "Signing in..." : "Sign In"}
-              {!loading && <ArrowRight size={20} />}
+              {loading ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <>
+                  Sign In <ArrowRight size={20} />
+                </>
+              )}
             </button>
           </form>
 
@@ -130,7 +156,7 @@ function Login() {
         </div>
       </div>
 
-      {/* RIGHT SIDE: Image (Hidden on Mobile) */}
+      {/* RIGHT SIDE: Image */}
       <div className="hidden md:block w-1/2 relative overflow-hidden">
         <img
           src={LOGIN_IMAGE}
@@ -138,7 +164,6 @@ function Login() {
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-primary/20 backdrop-blur-[2px]"></div>
-
         <div className="absolute bottom-10 left-10 right-10 text-white p-8 bg-black/30 backdrop-blur-md rounded-2xl border border-white/20">
           <p className="text-xl font-medium mb-4">
             "The best way to predict the future is to create it."

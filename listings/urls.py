@@ -9,7 +9,8 @@ from .views import (
     BookingViewSet,  # <--- Make sure this matches the class name in views.py!
     RegisterView, 
     CreateReviewView,
-    PropertyImageCreateView
+    PropertyImageCreateView,
+    UserInfoView
 )
 
 # 1. The Router handles all the standard "CRUD" URLs automatically
@@ -33,4 +34,5 @@ urlpatterns = [
     
     # Image Upload
     path('upload-image/', PropertyImageCreateView.as_view(), name='upload-image'),
+    path('user-info/', UserInfoView.as_view(), name='user-info'),
 ]

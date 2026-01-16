@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// --- HERO IMAGES ---
 const HERO_IMAGES = [
   "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?q=80&w=2069&auto=format&fit=crop",
   "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2070&auto=format&fit=crop",
@@ -21,10 +20,15 @@ const HERO_IMAGES = [
 const Home = () => {
   const [currentImage, setCurrentImage] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const [userRole, setUserRole] = useState(null); // NEW: Track Role
   const navigate = useNavigate();
 
-  // Slideshow Logic: Change image every 5 seconds
   useEffect(() => {
+    // 1. Check User Role on Load
+    const role = localStorage.getItem("role");
+    setUserRole(role);
+
+    // 2. Slideshow Timer
     const timer = setInterval(() => {
       setCurrentImage((prev) => (prev + 1) % HERO_IMAGES.length);
     }, 5000);
@@ -43,9 +47,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* --- 1. HERO SLIDESHOW SECTION --- */}
-      {/* Changed height from fixed 600px to dynamic 'min-h-[500px]' or '80vh' for mobile */}
       <div className="relative h-[85vh] md:h-[600px] flex items-center justify-center overflow-hidden">
-        {/* Background Images */}
         <AnimatePresence mode="wait">
           <motion.img
             key={currentImage}
@@ -58,11 +60,8 @@ const Home = () => {
             alt="Hero Background"
           />
         </AnimatePresence>
-
-        {/* Darker Overlay (bg-black/50) for better text contrast */}
         <div className="absolute inset-0 bg-black/50" />
 
-        {/* Hero Content */}
         <div className="relative z-10 text-center px-4 w-full max-w-4xl mx-auto">
           <motion.h1
             initial={{ y: 20, opacity: 0 }}
@@ -71,7 +70,6 @@ const Home = () => {
             className="text-4xl md:text-6xl font-bold text-white mb-6 drop-shadow-lg leading-tight"
           >
             Find your Home <br className="md:hidden" />
-            {/* Using text-sky-400 (lighter blue) for better readability on dark bg */}
             <span className="text-sky-400 block md:inline mt-2 md:mt-0">
               Away from Home.
             </span>
@@ -87,16 +85,14 @@ const Home = () => {
             campus.
           </motion.p>
 
-          {/* Search Bar - Responsive Design */}
+          {/* Search Bar */}
           <motion.form
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.9 }}
             onSubmit={handleSearch}
-            // Mobile: Rounded-2xl, Column Layout. Desktop: Rounded-full, Row Layout.
             className="bg-white p-3 rounded-2xl md:rounded-full shadow-2xl flex flex-col md:flex-row items-center w-full max-w-2xl mx-auto gap-3 md:gap-0"
           >
-            {/* Input Section */}
             <div className="flex items-center w-full px-2 md:pl-6">
               <MapPin className="text-gray-400 mr-3 flex-shrink-0" />
               <input
@@ -107,8 +103,6 @@ const Home = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-
-            {/* Button Section - Full width on mobile */}
             <button
               type="submit"
               className="w-full md:w-auto bg-primary hover:bg-blue-700 text-white px-8 py-3 rounded-xl md:rounded-full font-bold transition-all flex items-center justify-center gap-2 flex-shrink-0"
@@ -119,7 +113,7 @@ const Home = () => {
         </div>
       </div>
 
-      {/* --- 2. FEATURES / TRUST SECTION --- */}
+      {/* --- 2. FEATURES SECTION --- */}
       <div className="py-20 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
@@ -132,7 +126,6 @@ const Home = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 text-center">
-            {/* Feature 1 */}
             <div className="bg-white p-8 rounded-2xl shadow-sm hover:shadow-md transition-all">
               <div className="w-16 h-16 bg-blue-100 text-primary rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <ShieldCheck size={32} />
@@ -143,8 +136,6 @@ const Home = () => {
                 standards before being listed.
               </p>
             </div>
-
-            {/* Feature 2 */}
             <div className="bg-white p-8 rounded-2xl shadow-sm hover:shadow-md transition-all">
               <div className="w-16 h-16 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Zap size={32} />
@@ -155,8 +146,6 @@ const Home = () => {
                 not days.
               </p>
             </div>
-
-            {/* Feature 3 */}
             <div className="bg-white p-8 rounded-2xl shadow-sm hover:shadow-md transition-all">
               <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <MapPin size={32} />
@@ -186,6 +175,7 @@ const Home = () => {
               The Easiest Way to Rent
             </h2>
             <div className="space-y-6">
+              {/* Steps... (same as before) */}
               <div className="flex gap-4">
                 <div className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">
                   1
@@ -223,7 +213,6 @@ const Home = () => {
                 </div>
               </div>
             </div>
-
             <Link
               to="/listings"
               className="inline-flex items-center gap-2 mt-8 text-primary font-bold hover:underline text-lg"
@@ -234,32 +223,39 @@ const Home = () => {
         </div>
       </div>
 
-      {/* --- 4. LANDLORD CTA BANNER --- */}
-      <div className="bg-gray-900 py-20 px-4">
-        <div className="max-w-5xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Have an empty room?
-          </h2>
-          <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-            Join hundreds of landlords using CampusAcc to fill their properties
-            with reliable students. It's free to list.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link
-              to="/add-property"
-              className="bg-white text-gray-900 px-8 py-4 rounded-xl font-bold hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
-            >
-              <HomeIcon size={20} /> List Your Property
-            </Link>
-            <Link
-              to="/register"
-              className="bg-transparent border border-gray-600 text-white px-8 py-4 rounded-xl font-bold hover:border-white hover:bg-white/5 transition-colors flex items-center justify-center gap-2"
-            >
-              <UserCheck size={20} /> Create Account
-            </Link>
+      {/* --- 4. LANDLORD CTA BANNER (LOGIC UPDATED) --- */}
+      {/* Hide this entire section if user is a STUDENT */}
+      {userRole !== "student" && (
+        <div className="bg-gray-900 py-20 px-4">
+          <div className="max-w-5xl mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+              Have an empty room?
+            </h2>
+            <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
+              Join hundreds of landlords using CampusAcc to fill their
+              properties with reliable students. It's free to list.
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Link
+                to="/add-property"
+                className="bg-white text-gray-900 px-8 py-4 rounded-xl font-bold hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+              >
+                <HomeIcon size={20} /> List Your Property
+              </Link>
+
+              {/* Only show 'Create Account' if not logged in at all */}
+              {!userRole && (
+                <Link
+                  to="/register"
+                  className="bg-transparent border border-gray-600 text-white px-8 py-4 rounded-xl font-bold hover:border-white hover:bg-white/5 transition-colors flex items-center justify-center gap-2"
+                >
+                  <UserCheck size={20} /> Create Account
+                </Link>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

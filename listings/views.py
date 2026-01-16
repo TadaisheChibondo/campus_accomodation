@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.contrib.auth.models import User
 from django.db.models import Q # <--- NEEDED FOR COMPLEX QUERIES
+from rest_framework.views import APIView
+
 
 from .models import Property, PropertyImage, Review, Booking
 from .serializers import (
@@ -73,3 +75,17 @@ class CreateReviewView(generics.CreateAPIView):
         property_id = self.kwargs['pk']
         property_instance = Property.objects.get(pk=property_id)
         serializer.save(user=self.request.user, property=property_instance)
+
+
+class UserInfoView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        # safely get role, default to student if profile missing
+        role = getattr(user, 'profile', None) and user.profile.role or 'student'
+        return Response({
+            "username": user.username,
+            "role": role
+        })
+    
