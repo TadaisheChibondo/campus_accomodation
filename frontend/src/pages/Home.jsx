@@ -13,9 +13,9 @@ import { motion, AnimatePresence } from "framer-motion";
 
 // --- HERO IMAGES ---
 const HERO_IMAGES = [
-  "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?q=80&w=2069&auto=format&fit=crop", // Dorm room
-  "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2070&auto=format&fit=crop", // Students laughing
-  "https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?q=80&w=2062&auto=format&fit=crop", // Library/Study
+  "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?q=80&w=2069&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2070&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?q=80&w=2062&auto=format&fit=crop",
 ];
 
 const Home = () => {
@@ -34,7 +34,6 @@ const Home = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // Navigate to listings page with the search term pre-filled (you'd need to update Listings.jsx to read this param, but simple nav works for now)
       navigate(`/listings?search=${searchQuery}`);
     } else {
       navigate("/listings");
@@ -44,8 +43,9 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* --- 1. HERO SLIDESHOW SECTION --- */}
-      <div className="relative h-[600px] flex items-center justify-center overflow-hidden">
-        {/* Background Images with Fade Effect */}
+      {/* Changed height from fixed 600px to dynamic 'min-h-[500px]' or '80vh' for mobile */}
+      <div className="relative h-[85vh] md:h-[600px] flex items-center justify-center overflow-hidden">
+        {/* Background Images */}
         <AnimatePresence mode="wait">
           <motion.img
             key={currentImage}
@@ -54,24 +54,25 @@ const Home = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.5 }}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover object-center"
             alt="Hero Background"
           />
         </AnimatePresence>
 
-        {/* Dark Overlay for Text Readability */}
-        <div className="absolute inset-0 bg-black/40" />
+        {/* Darker Overlay (bg-black/50) for better text contrast */}
+        <div className="absolute inset-0 bg-black/50" />
 
         {/* Hero Content */}
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+        <div className="relative z-10 text-center px-4 w-full max-w-4xl mx-auto">
           <motion.h1
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="text-4xl md:text-6xl font-bold text-white mb-6 drop-shadow-lg"
+            className="text-4xl md:text-6xl font-bold text-white mb-6 drop-shadow-lg leading-tight"
           >
-            Find your Home{" "}
-            <span className="text-primary block md:inline">
+            Find your Home <br className="md:hidden" />
+            {/* Using text-sky-400 (lighter blue) for better readability on dark bg */}
+            <span className="text-sky-400 block md:inline mt-2 md:mt-0">
               Away from Home.
             </span>
           </motion.h1>
@@ -86,25 +87,31 @@ const Home = () => {
             campus.
           </motion.p>
 
-          {/* Search Bar */}
+          {/* Search Bar - Responsive Design */}
           <motion.form
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.9 }}
             onSubmit={handleSearch}
-            className="bg-white p-2 rounded-full shadow-2xl flex items-center max-w-2xl mx-auto pl-6"
+            // Mobile: Rounded-2xl, Column Layout. Desktop: Rounded-full, Row Layout.
+            className="bg-white p-3 rounded-2xl md:rounded-full shadow-2xl flex flex-col md:flex-row items-center w-full max-w-2xl mx-auto gap-3 md:gap-0"
           >
-            <MapPin className="text-gray-400 mr-3" />
-            <input
-              type="text"
-              placeholder="Where do you want to live? (e.g. Selbourne Park)"
-              className="flex-1 outline-none text-gray-700 placeholder-gray-400"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            {/* Input Section */}
+            <div className="flex items-center w-full px-2 md:pl-6">
+              <MapPin className="text-gray-400 mr-3 flex-shrink-0" />
+              <input
+                type="text"
+                placeholder="Where to? (e.g. Selbourne)"
+                className="flex-1 outline-none text-gray-700 placeholder-gray-400 w-full"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            {/* Button Section - Full width on mobile */}
             <button
               type="submit"
-              className="bg-primary hover:bg-blue-700 text-white px-8 py-3 rounded-full font-bold transition-all flex items-center gap-2"
+              className="w-full md:w-auto bg-primary hover:bg-blue-700 text-white px-8 py-3 rounded-xl md:rounded-full font-bold transition-all flex items-center justify-center gap-2 flex-shrink-0"
             >
               <Search size={18} /> Search
             </button>
@@ -171,7 +178,7 @@ const Home = () => {
             <img
               src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop"
               alt="Students collaborating"
-              className="rounded-2xl shadow-2xl"
+              className="rounded-2xl shadow-2xl w-full"
             />
           </div>
           <div className="md:w-1/2">

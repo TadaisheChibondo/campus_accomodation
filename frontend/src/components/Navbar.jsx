@@ -9,6 +9,7 @@ import {
   PlusCircle,
   LayoutDashboard,
   List,
+  Info,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -17,9 +18,8 @@ const Navbar = () => {
   const [currentUser, setCurrentUser] = useState(null);
 
   const navigate = useNavigate();
-  const location = useLocation(); // Triggers re-render on route change
+  const location = useLocation();
 
-  // Check login state whenever the route changes
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     const username = localStorage.getItem("username");
@@ -61,7 +61,8 @@ const Navbar = () => {
               icon={<List size={18} />}
               text="Find a Room"
             />
-
+            <NavLink to="/about" icon={<Info size={18} />} text="About" />{" "}
+            {/* <--- ADDED THIS */}
             {/* LOGGED IN STATE */}
             {currentUser ? (
               <div className="flex items-center gap-6 pl-6 border-l border-gray-200">
@@ -144,7 +145,13 @@ const Navbar = () => {
                 onClick={() => setIsOpen(false)}
                 icon={<List size={20} />}
               />
-
+              <MobileLink
+                to="/about"
+                text="About"
+                onClick={() => setIsOpen(false)}
+                icon={<Info size={20} />}
+              />{" "}
+              {/* <--- ADDED THIS */}
               {currentUser ? (
                 <div className="pt-4 mt-2 border-t border-gray-100 space-y-4">
                   <div className="flex items-center gap-2 text-gray-500 mb-2">
@@ -202,7 +209,6 @@ const Navbar = () => {
 };
 
 // --- HELPER COMPONENTS ---
-
 const NavLink = ({ to, text, icon }) => (
   <Link
     to={to}
