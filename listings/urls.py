@@ -6,11 +6,11 @@ from rest_framework_simplejwt.views import (
 )
 from .views import (
     PropertyViewSet, 
-    BookingViewSet,  # <--- Make sure this matches the class name in views.py!
+    BookingViewSet,
     RegisterView, 
     CreateReviewView,
     PropertyImageCreateView,
-    UserInfoView
+    UserInfoView # <--- Verified Import
 )
 
 # 1. The Router handles all the standard "CRUD" URLs automatically
@@ -22,17 +22,18 @@ urlpatterns = [
     # Router URLs (Properties & Bookings)
     path('', include(router.urls)),
 
-    # 2. Authentication URLs (CRITICAL for Login.jsx)
+    # 2. Authentication URLs
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('register/', RegisterView.as_view(), name='register'),
 
     # 3. Custom Action URLs
-    # Since PropertyViewSet handles standard stuff, we only keep custom overrides if needed.
-    # If CreateReviewView is a separate view (not inside the ViewSet), keep this:
+    # Reviews
     path('properties/<int:pk>/review/', CreateReviewView.as_view(), name='create-review'),
     
     # Image Upload
     path('upload-image/', PropertyImageCreateView.as_view(), name='upload-image'),
+
+    # 4. User Info (The Fix for the 404 Error)
     path('user-info/', UserInfoView.as_view(), name='user-info'),
 ]
