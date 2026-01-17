@@ -61,11 +61,16 @@ const Navbar = () => {
           {/* DESKTOP NAV */}
           <div className="hidden md:flex items-center space-x-8">
             <NavLink to="/" icon={<Home size={18} />} text="Home" />
-            <NavLink
-              to="/listings"
-              icon={<List size={18} />}
-              text="Find a Room"
-            />
+
+            {/* FIX: Only show Listings if user is NOT a landlord */}
+            {userRole !== "landlord" && (
+              <NavLink
+                to="/listings"
+                icon={<List size={18} />}
+                text="Find a Room"
+              />
+            )}
+
             <NavLink to="/about" icon={<Info size={18} />} text="About" />
 
             {currentUser ? (
@@ -147,12 +152,17 @@ const Navbar = () => {
                 onClick={() => setIsOpen(false)}
                 icon={<Home size={20} />}
               />
-              <MobileLink
-                to="/listings"
-                text="Find a Room"
-                onClick={() => setIsOpen(false)}
-                icon={<List size={20} />}
-              />
+
+              {/* FIX: Only show Listings if user is NOT a landlord */}
+              {userRole !== "landlord" && (
+                <MobileLink
+                  to="/listings"
+                  text="Find a Room"
+                  onClick={() => setIsOpen(false)}
+                  icon={<List size={20} />}
+                />
+              )}
+
               <MobileLink
                 to="/about"
                 text="About"

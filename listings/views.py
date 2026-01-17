@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.contrib.auth.models import User
-from django.db.models import Q # <--- NEEDED FOR COMPLEX QUERIES
+from django.db.models import Q 
 from rest_framework.views import APIView
 
 
@@ -55,7 +55,7 @@ class BookingViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(bookings, many=True)
         return Response(serializer.data)
 
-# 3. SPECIALIZED VIEWS (Keep these as is)
+# 3. SPECIALIZED VIEWS
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -76,16 +76,23 @@ class CreateReviewView(generics.CreateAPIView):
         property_instance = Property.objects.get(pk=property_id)
         serializer.save(user=self.request.user, property=property_instance)
 
-
+# FIX: Updated UserInfoView to be safer
 class UserInfoView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         user = request.user
-        # safely get role, default to student if profile missing
-        role = getattr(user, 'profile', None) and user.profile.role or 'student'
+        role = "student" # Default fallback
+        
+        try:
+            # We access the related_name 'profile' defined in your models.py
+            if hasattr(user, 'profile'):
+                role = user.profile.role
+        except Exception as e:
+            # If anything goes wrong, log it but don't crash the app
+            print(f"Error fetching role for {user.username}: {e}")
+        
         return Response({
             "username": user.username,
             "role": role
         })
-    
