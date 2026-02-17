@@ -36,6 +36,8 @@ const UNI_LNG = 31.053;
 
 const PropertyDetail = () => {
   const { id } = useParams();
+  const API_URL = import.meta.env.VITE_API_URL; // <-- The clean variable!
+
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [distance, setDistance] = useState(null);
@@ -71,7 +73,7 @@ const PropertyDetail = () => {
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
     axios
-      .get(`import.meta.env.VITE_API_URL/api/properties/${id}/`, { headers })
+      .get(`${API_URL}/api/properties/${id}/`, { headers })
       .then((res) => {
         setProperty(res.data);
         if (res.data.images && res.data.images.length > 0)
@@ -99,15 +101,13 @@ const PropertyDetail = () => {
     if (!token) return alert("Please login to write a review!");
     try {
       await axios.post(
-        `import.meta.env.VITE_API_URL/api/properties/${id}/review/`,
+        `${API_URL}/api/properties/${id}/review/`,
         { rating, comment },
         { headers: { Authorization: `Bearer ${token}` } },
       );
       setReviewStatus("success");
       setComment("");
-      const res = await axios.get(
-        `import.meta.env.VITE_API_URL/api/properties/${id}/`,
-      );
+      const res = await axios.get(`${API_URL}/api/properties/${id}/`);
       setProperty(res.data);
     } catch (err) {
       setReviewStatus("error");
@@ -119,7 +119,7 @@ const PropertyDetail = () => {
     if (!token) return alert("Please log in to save properties!");
     try {
       const res = await axios.post(
-        `import.meta.env.VITE_API_URL/api/properties/${id}/favorite/`,
+        `${API_URL}/api/properties/${id}/favorite/`,
         {},
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -138,7 +138,7 @@ const PropertyDetail = () => {
     }
     try {
       await axios.post(
-        `import.meta.env.VITE_API_URL/api/properties/${id}/report/`,
+        `${API_URL}/api/properties/${id}/report/`,
         { reason: reportReason, description: reportDescription },
         { headers: { Authorization: `Bearer ${token}` } },
       );
