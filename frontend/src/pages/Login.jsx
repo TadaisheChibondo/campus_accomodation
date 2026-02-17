@@ -21,10 +21,13 @@ function Login() {
 
     try {
       // 1. Get Token
-      const res = await axios.post("import.meta.env.VITE_API_URL/api/token/", {
-        username,
-        password,
-      });
+      const res = await axios.post(
+        import.meta.env.VITE_API_URL + "/api/token/",
+        {
+          username,
+          password,
+        },
+      );
 
       const accessToken = res.data.access;
       localStorage.setItem("access_token", accessToken);
@@ -35,7 +38,7 @@ function Login() {
       let role = "student";
       try {
         const userRes = await axios.get(
-          "import.meta.env.VITE_API_URL/api/user/info/",
+          import.meta.env.VITE_API_URL + "/api/user/info/",
           {
             headers: { Authorization: `Bearer ${accessToken}` },
           },

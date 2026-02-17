@@ -20,7 +20,7 @@ const Wishlist = () => {
     }
     try {
       const res = await axios.get(
-        "import.meta.env.VITE_API_URL/api/properties/favorites/",
+        import.meta.env.VITE_API_URL + "/api/properties/favorites/",
         {
           headers: { Authorization: `Bearer ${token}` },
         },

@@ -29,7 +29,7 @@ const LandlordDashboard = () => {
 
       try {
         const reqRes = await axios.get(
-          "import.meta.env.VITE_API_URL/api/bookings/manage/",
+          import.meta.env.VITE_API_URL + "/api/bookings/manage/",
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -37,7 +37,7 @@ const LandlordDashboard = () => {
         setRequests(reqRes.data);
 
         const propRes = await axios.get(
-          "import.meta.env.VITE_API_URL/api/properties/my_listings/",
+          import.meta.env.VITE_API_URL + "/api/properties/my_listings/",
           {
             headers: { Authorization: `Bearer ${token}` },
           },

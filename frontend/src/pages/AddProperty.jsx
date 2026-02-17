@@ -80,7 +80,7 @@ function AddProperty() {
 
     try {
       const propertyRes = await axios.post(
-        "import.meta.env.VITE_API_URL/api/properties/",
+        import.meta.env.VITE_API_URL + "/api/properties/",
         dataToSend,
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -94,7 +94,7 @@ function AddProperty() {
           imageData.append("image", images[i]);
 
           await axios.post(
-            "import.meta.env.VITE_API_URL/api/upload-image/",
+            import.meta.env.VITE_API_URL + "/api/upload-image/",
             imageData,
             {
               headers: {

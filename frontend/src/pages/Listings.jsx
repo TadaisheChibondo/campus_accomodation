@@ -45,7 +45,7 @@ const Listings = () => {
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
     axios
-      .get("import.meta.env.VITE_API_URL/api/properties/", { headers })
+      .get(import.meta.env.VITE_API_URL + "/api/properties/", { headers })
       .then((res) => {
         setProperties(res.data);
         setFilteredProperties(res.data);

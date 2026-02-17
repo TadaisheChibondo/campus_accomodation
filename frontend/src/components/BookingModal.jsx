@@ -33,7 +33,7 @@ const BookingModal = ({
     try {
       // Adjust this URL to match your actual Django backend endpoint
       await axios.post(
-        "import.meta.env.VITE_API_URL/api/bookings/",
+        import.meta.env.VITE_API_URL + "/api/bookings/",
         {
           property: propertyId,
           move_in_date: formData.move_in_date,

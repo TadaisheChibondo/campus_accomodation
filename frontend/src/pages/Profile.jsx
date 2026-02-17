@@ -39,7 +39,7 @@ const Profile = () => {
       }
       try {
         const res = await axios.get(
-          "import.meta.env.VITE_API_URL/api/user/info/",
+          import.meta.env.VITE_API_URL + "/api/user/info/",
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -97,7 +97,7 @@ const Profile = () => {
 
     try {
       const res = await axios.patch(
-        "import.meta.env.VITE_API_URL/api/user/info/",
+        import.meta.env.VITE_API_URL + "/api/user/info/",
         formData,
         {
           headers: {
