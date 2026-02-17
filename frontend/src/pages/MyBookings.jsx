@@ -41,9 +41,12 @@ const MyBookings = () => {
     fetchBookings();
   }, []);
 
-  // Helper for Status Badges
+// Helper for Status Badges
   const getStatusBadge = (status) => {
-    switch (status) {
+    // FIX: Normalize the string to lowercase so "Accepted", "ACCEPTED", and "accepted" all work!
+    const normalizedStatus = status ? status.toLowerCase() : "pending";
+
+    switch (normalizedStatus) {
       case "accepted":
         return (
           <span className="flex items-center gap-1 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">

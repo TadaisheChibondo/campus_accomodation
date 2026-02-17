@@ -82,7 +82,7 @@ class PropertySerializer(serializers.ModelSerializer):
 class BookingSerializer(serializers.ModelSerializer):
     student_name = serializers.ReadOnlyField(source='student.username')
     property_title = serializers.ReadOnlyField(source='property.title')
-    status = serializers.ReadOnlyField() 
+     
 
     class Meta:
         model = Booking
