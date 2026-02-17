@@ -31,8 +31,8 @@ let DefaultIcon = L.icon({
   iconAnchor: [12, 41],
 });
 L.Marker.prototype.options.icon = DefaultIcon;
-const UNI_LAT = -17.784;
-const UNI_LNG = 31.053;
+const UNI_LAT = -20.165;
+const UNI_LNG = 28.642;
 
 const PropertyDetail = () => {
   const { id } = useParams();
