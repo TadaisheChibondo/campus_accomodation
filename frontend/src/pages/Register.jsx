@@ -28,18 +28,15 @@ const Register = () => {
 
     try {
       // 1. REGISTER THE USER
-      await axios.post(
-        "https://campus-acc-backend.onrender.com/api/register/",
-        formData
-      );
+      await axios.post("import.meta.env.VITE_API_URL/api/register/", formData);
 
       // 2. AUTO-LOGIN (Get Token)
       const loginRes = await axios.post(
-        "https://campus-acc-backend.onrender.com/api/token/",
+        "import.meta.env.VITE_API_URL/api/token/",
         {
           username: formData.username,
           password: formData.password,
-        }
+        },
       );
 
       const accessToken = loginRes.data.access;

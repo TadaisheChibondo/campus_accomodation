@@ -9,6 +9,11 @@ import AddProperty from "./pages/AddProperty";
 import About from "./pages/About";
 import MyBookings from "./pages/MyBookings";
 import LandlordDashboard from "./pages/LandlordDashboard";
+import Profile from './pages/Profile';
+import Wishlist from './pages/Wishlist';
+import TrustSafety from './pages/TrustSafety';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 function App() {
   return (
@@ -27,6 +32,11 @@ function App() {
           <Route path="/listings" element={<Listings />} />
           <Route path="/my-bookings" element={<MyBookings />} />
           <Route path="/dashboard" element={<LandlordDashboard />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/trust" element={<TrustSafety />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
         </Routes>
       </Layout>
     </Router>

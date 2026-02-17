@@ -229,3 +229,23 @@ else:
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
     }
+
+# # --- EMAIL SETTINGS ---
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+
+# # Replace these with your actual details!
+# EMAIL_HOST_USER = 'tadaishechibondo@gmail.com' 
+# EMAIL_HOST_PASSWORD = 'qccyplljflmmsefn' # Paste the app password here (no spaces)
+
+# --- EMAIL SETTINGS ---
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = 'tadaishechibondo@gmail.com' 
+# Pull the password from the live server environment, not this file!
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_APP_PASSWORD', 'qccyplljflmmsefn')

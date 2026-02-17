@@ -10,6 +10,8 @@ import {
   LayoutDashboard,
   List,
   Info,
+  Heart, // <--- ADDED THE MISSING IMPORT HERE!
+  ShieldCheck
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -62,7 +64,7 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-8">
             <NavLink to="/" icon={<Home size={18} />} text="Home" />
 
-            {/* FIX: Only show Listings if user is NOT a landlord */}
+            {/* Only show Listings if user is NOT a landlord */}
             {userRole !== "landlord" && (
               <NavLink
                 to="/listings"
@@ -72,21 +74,29 @@ const Navbar = () => {
             )}
 
             <NavLink to="/about" icon={<Info size={18} />} text="About" />
+            <NavLink to="/trust" icon={<ShieldCheck size={18} />} text="Trust & Safety" /> {/* NEW LINK */}
 
             {currentUser ? (
               <div className="flex items-center gap-6 pl-6 border-l border-gray-200">
-                <span className="text-gray-900 font-medium cursor-default">
-                  Hi, {currentUser.name}
-                </span>
+                
+                {/* CLICKABLE PROFILE LINK */}
+                <Link 
+                  to="/profile" 
+                  className="text-gray-900 font-medium hover:text-primary transition-colors flex items-center gap-2"
+                >
+                  <User size={18} className="text-primary" /> Hi, {currentUser.name}
+                </Link>
 
                 {/* STUDENT BUTTONS */}
                 {userRole === "student" && (
-                  <Link
-                    to="/my-bookings"
-                    className="text-gray-600 hover:text-primary font-medium transition-colors text-sm"
-                  >
-                    My Requests
-                  </Link>
+                  <>
+                    <Link to="/wishlist" className="text-gray-600 hover:text-red-500 font-medium transition-colors text-sm flex items-center gap-1">
+                      <Heart size={16} /> Saved
+                    </Link>
+                    <Link to="/my-bookings" className="text-gray-600 hover:text-primary font-medium transition-colors text-sm">
+                      My Requests
+                    </Link>
+                  </>
                 )}
 
                 {/* LANDLORD BUTTONS */}
@@ -153,7 +163,7 @@ const Navbar = () => {
                 icon={<Home size={20} />}
               />
 
-              {/* FIX: Only show Listings if user is NOT a landlord */}
+              {/* Only show Listings if user is NOT a landlord */}
               {userRole !== "landlord" && (
                 <MobileLink
                   to="/listings"
@@ -169,7 +179,13 @@ const Navbar = () => {
                 onClick={() => setIsOpen(false)}
                 icon={<Info size={20} />}
               />
-
+              <MobileLink
+                to="/trust"
+                text="Trust & Safety"
+                onClick={() => setIsOpen(false)}
+                icon={<ShieldCheck size={20} />}
+              /> {/* NEW LINK */}
+              
               {currentUser ? (
                 <div className="pt-4 mt-2 border-t border-gray-100 space-y-4">
                   <div className="flex items-center gap-2 text-gray-500 mb-2">
@@ -179,13 +195,29 @@ const Navbar = () => {
                     </span>
                   </div>
 
-                  {userRole === "student" && (
-                    <MobileLink
-                      to="/my-bookings"
-                      text="My Requests"
+                  <MobileLink
+                      to="/profile"
+                      text="My Profile"
                       onClick={() => setIsOpen(false)}
-                      highlight
-                    />
+                      icon={<User size={20} />}
+                  />
+
+                  {/* --- NEW: MOBILE STUDENT LINKS --- */}
+                  {userRole === "student" && (
+                    <>
+                      <MobileLink
+                        to="/wishlist"
+                        text="Saved Homes"
+                        onClick={() => setIsOpen(false)}
+                        icon={<Heart size={20} />}
+                      />
+                      <MobileLink
+                        to="/my-bookings"
+                        text="My Requests"
+                        onClick={() => setIsOpen(false)}
+                        highlight
+                      />
+                    </>
                   )}
 
                   {userRole === "landlord" && (
@@ -208,7 +240,7 @@ const Navbar = () => {
 
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-2 text-red-500 font-medium py-2"
+                    className="flex items-center gap-2 text-red-500 font-medium py-2 w-full"
                   >
                     <LogOut size={20} /> Logout
                   </button>

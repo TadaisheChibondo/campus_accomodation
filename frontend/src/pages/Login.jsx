@@ -21,27 +21,24 @@ function Login() {
 
     try {
       // 1. Get Token
-      const res = await axios.post(
-        "https://campus-acc-backend.onrender.com/api/token/",
-        {
-          username,
-          password,
-        }
-      );
+      const res = await axios.post("import.meta.env.VITE_API_URL/api/token/", {
+        username,
+        password,
+      });
 
       const accessToken = res.data.access;
       localStorage.setItem("access_token", accessToken);
       localStorage.setItem("refresh_token", res.data.refresh);
       localStorage.setItem("username", username);
 
-      // 2. Fetch User Role (Needed to know where to send them)
+      // 2. Fetch User Role (FIXED: Dash changed to slash to match backend)
       let role = "student";
       try {
         const userRes = await axios.get(
-          "https://campus-acc-backend.onrender.com/api/user-info/",
+          "import.meta.env.VITE_API_URL/api/user/info/",
           {
             headers: { Authorization: `Bearer ${accessToken}` },
-          }
+          },
         );
         role = userRes.data.role;
         localStorage.setItem("role", role);
@@ -122,6 +119,14 @@ function Login() {
                   placeholder="••••••••"
                   required
                 />
+                <div className="text-right mt-2">
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm font-medium text-primary hover:underline"
+                  >
+                    Forgot your password?
+                  </Link>
+                </div>
               </div>
             </div>
 

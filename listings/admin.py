@@ -1,14 +1,10 @@
 from django.contrib import admin
-from .models import Property, PropertyImage
+from .models import Property, PropertyImage, Review, Booking, Profile, Report
 
-# This class allows you to upload multiple images directly inside the Property page
-class PropertyImageInline(admin.TabularInline):
-    model = PropertyImage
-    extra = 1
-
-class PropertyAdmin(admin.ModelAdmin):
-    list_display = ('title', 'price_per_month', 'is_available', 'landlord')
-    inlines = [PropertyImageInline] # Connects the images to the property
-
-admin.site.register(Property, PropertyAdmin)
+# This tells Django to show these tables in the Admin Dashboard
+admin.site.register(Property)
 admin.site.register(PropertyImage)
+admin.site.register(Review)
+admin.site.register(Booking)
+admin.site.register(Profile)
+admin.site.register(Report)

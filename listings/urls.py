@@ -10,7 +10,9 @@ from .views import (
     RegisterView, 
     CreateReviewView,
     PropertyImageCreateView,
-    UserInfoView # <--- Verified Import
+    UserInfoView,
+    RequestPasswordResetView,   # <--- ADD THIS
+    PasswordResetConfirmView,
 )
 
 # 1. The Router handles all the standard "CRUD" URLs automatically
@@ -34,6 +36,9 @@ urlpatterns = [
     # Image Upload
     path('upload-image/', PropertyImageCreateView.as_view(), name='upload-image'),
 
-    # 4. User Info (The Fix for the 404 Error)
-    path('user-info/', UserInfoView.as_view(), name='user-info'),
+    # 4. User Info (FIXED: Changed dash to slash to match frontend!)
+    path('user/info/', UserInfoView.as_view(), name='user-info'),
+    # Password Reset
+    path('password-reset/', RequestPasswordResetView.as_view(), name='password_reset'),
+    path('password-reset-confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
 ]
