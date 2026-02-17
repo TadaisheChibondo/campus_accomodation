@@ -21,13 +21,13 @@ function AddProperty() {
     address: "",
     latitude: "",
     longitude: "",
+    gender_preference: "Mixed", // <--- NEW STATE ADDED
   });
-  const [images, setImages] = useState([]); // Stores the actual files
-  const [previews, setPreviews] = useState([]); // Stores the preview URLs
+  const [images, setImages] = useState([]);
+  const [previews, setPreviews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Helper to get current GPS location
   const handleGetLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -40,26 +40,20 @@ function AddProperty() {
         },
         (err) => {
           alert("Could not get location. Please allow permissions.");
-        }
+        },
       );
     } else {
       alert("Geolocation is not supported by this browser.");
     }
   };
 
-  // Handle Image Selection & Preview Generation
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-
-    // 1. Update the 'images' state with the File objects (for uploading)
     setImages(files);
-
-    // 2. Generate temporary URLs for previews
     const newPreviews = files.map((file) => URL.createObjectURL(file));
     setPreviews(newPreviews);
   };
 
-  // Clean up object URLs to avoid memory leaks
   useEffect(() => {
     return () => {
       previews.forEach((url) => URL.revokeObjectURL(url));
@@ -85,16 +79,14 @@ function AddProperty() {
     };
 
     try {
-      // STEP 1: Create the Property
       const propertyRes = await axios.post(
-        "https://campus-acc-backend.onrender.com/api/properties/",
+        "import.meta.env.VITE_API_URL/api/properties/",
         dataToSend,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       const propertyId = propertyRes.data.id;
 
-      // STEP 2: Upload Images Loop
       if (images && images.length > 0) {
         for (let i = 0; i < images.length; i++) {
           const imageData = new FormData();
@@ -102,14 +94,14 @@ function AddProperty() {
           imageData.append("image", images[i]);
 
           await axios.post(
-            "https://campus-acc-backend.onrender.com/api/upload-image/",
+            "import.meta.env.VITE_API_URL/api/upload-image/",
             imageData,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "multipart/form-data",
               },
-            }
+            },
           );
         }
       }
@@ -143,7 +135,6 @@ function AddProperty() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* SECTION 1: BASIC INFO */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <Home size={20} className="text-primary" /> Basic Information
@@ -234,11 +225,31 @@ function AddProperty() {
                   </div>
                 </div>
               </div>
+
+              {/* --- NEW GENDER DROPDOWN --- */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tenant Preference
+                </label>
+                <select
+                  value={formData.gender_preference}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      gender_preference: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all bg-white"
+                >
+                  <option value="Mixed">Mixed (Gents & Ladies)</option>
+                  <option value="Gents">Gents Only</option>
+                  <option value="Ladies">Ladies Only</option>
+                </select>
+              </div>
             </div>
 
             <hr className="border-gray-100" />
 
-            {/* SECTION 2: LOCATION */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -273,7 +284,6 @@ function AddProperty() {
 
             <hr className="border-gray-100" />
 
-            {/* SECTION 3: IMAGES */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <Upload size={20} className="text-primary" /> Photos
@@ -282,7 +292,7 @@ function AddProperty() {
               <div className="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center hover:bg-gray-50 transition-colors relative">
                 <input
                   type="file"
-                  multiple // This attribute enables multiple selection!
+                  multiple
                   onChange={handleImageChange}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
@@ -299,7 +309,6 @@ function AddProperty() {
                 </div>
               </div>
 
-              {/* NEW: PREVIEW GRID */}
               {previews.length > 0 && (
                 <div className="mt-6 grid grid-cols-3 md:grid-cols-4 gap-4">
                   {previews.map((url, index) => (

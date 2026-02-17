@@ -33,13 +33,13 @@ const BookingModal = ({
     try {
       // Adjust this URL to match your actual Django backend endpoint
       await axios.post(
-        "https://campus-acc-backend.onrender.com/api/bookings/",
+        "import.meta.env.VITE_API_URL/api/bookings/",
         {
           property: propertyId,
           move_in_date: formData.move_in_date,
           message: formData.message,
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       setStatus("success");
       // Close modal after 2 seconds

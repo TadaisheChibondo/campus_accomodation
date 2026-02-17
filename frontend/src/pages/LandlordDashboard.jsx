@@ -8,6 +8,11 @@ import {
   User,
   Clock,
   Loader2,
+  Trash2,
+  Power,
+  BookOpen, // <--- NEW ICON
+  GraduationCap, // <--- NEW ICON
+  Phone, // <--- NEW ICON
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -23,21 +28,19 @@ const LandlordDashboard = () => {
       if (!token) return;
 
       try {
-        // 1. Get Booking Requests for MY properties
         const reqRes = await axios.get(
-          "https://campus-acc-backend.onrender.com/api/bookings/manage/",
+          "import.meta.env.VITE_API_URL/api/bookings/manage/",
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
         setRequests(reqRes.data);
 
-        // 2. Get MY Properties
         const propRes = await axios.get(
-          "https://campus-acc-backend.onrender.com/api/properties/my_listings/",
+          "import.meta.env.VITE_API_URL/api/properties/my_listings/",
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
         setMyProperties(propRes.data);
       } catch (err) {
@@ -49,24 +52,64 @@ const LandlordDashboard = () => {
     fetchData();
   }, []);
 
-  // HANDLE ACCEPT/REJECT
+  // HANDLE BOOKING ACCEPT/REJECT
   const handleStatusUpdate = async (bookingId, newStatus) => {
     const token = localStorage.getItem("access_token");
     try {
       await axios.patch(
-        `https://campus-acc-backend.onrender.com/api/bookings/${bookingId}/`,
+        `import.meta.env.VITE_API_URL/api/bookings/${bookingId}/`,
         { status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
-
-      // Update UI instantly
       setRequests((prev) =>
         prev.map((req) =>
-          req.id === bookingId ? { ...req, status: newStatus } : req
-        )
+          req.id === bookingId ? { ...req, status: newStatus } : req,
+        ),
       );
     } catch (err) {
       alert("Failed to update status. Check your connection.");
+    }
+  };
+
+  // HANDLE PROPERTY DELETE
+  const handleDeleteProperty = async (propertyId) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this property? This action cannot be undone.",
+      )
+    )
+      return;
+
+    const token = localStorage.getItem("access_token");
+    try {
+      await axios.delete(
+        `import.meta.env.VITE_API_URL/api/properties/${propertyId}/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      setMyProperties((prev) => prev.filter((p) => p.id !== propertyId));
+    } catch (err) {
+      alert("Failed to delete property.");
+    }
+  };
+
+  // HANDLE TOGGLE AVAILABILITY
+  const handleToggleAvailability = async (propertyId, currentStatus) => {
+    const token = localStorage.getItem("access_token");
+    try {
+      await axios.patch(
+        `import.meta.env.VITE_API_URL/api/properties/${propertyId}/`,
+        { is_available: !currentStatus },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setMyProperties((prev) =>
+        prev.map((p) =>
+          p.id === propertyId ? { ...p, is_available: !currentStatus } : p,
+        ),
+      );
+    } catch (err) {
+      alert("Failed to update availability.");
     }
   };
 
@@ -103,7 +146,6 @@ const LandlordDashboard = () => {
             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
               <User size={20} className="text-primary" /> Incoming Requests
             </h2>
-
             {requests.length === 0 ? (
               <div className="bg-white p-10 rounded-2xl shadow-sm text-center border border-gray-100">
                 <div className="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -133,15 +175,40 @@ const LandlordDashboard = () => {
                       </p>
                     </div>
                     <div
-                      className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
-                        req.status === "pending"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : req.status === "accepted"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
+                      className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${req.status === "pending" ? "bg-yellow-100 text-yellow-700" : req.status === "accepted" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
                     >
                       {req.status}
+                    </div>
+                  </div>
+
+                  {/* --- NEW: STUDENT PROFILE INFO DISPLAY --- */}
+                  <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="bg-blue-50/50 p-3 rounded-xl border border-blue-100 flex items-center gap-2">
+                      <BookOpen size={16} className="text-blue-600" />
+                      <span
+                        className="text-sm font-medium text-blue-900 truncate"
+                        title={req.student_program}
+                      >
+                        {req.student_program || "No program"}
+                      </span>
+                    </div>
+                    <div className="bg-blue-50/50 p-3 rounded-xl border border-blue-100 flex items-center gap-2">
+                      <GraduationCap size={16} className="text-blue-600" />
+                      <span
+                        className="text-sm font-medium text-blue-900 truncate"
+                        title={req.student_year}
+                      >
+                        {req.student_year || "No year"}
+                      </span>
+                    </div>
+                    <div className="bg-blue-50/50 p-3 rounded-xl border border-blue-100 flex items-center gap-2">
+                      <Phone size={16} className="text-blue-600" />
+                      <span
+                        className="text-sm font-medium text-blue-900 truncate"
+                        title={req.student_phone}
+                      >
+                        {req.student_phone || "No phone"}
+                      </span>
                     </div>
                   </div>
 
@@ -161,8 +228,6 @@ const LandlordDashboard = () => {
                         {new Date(req.created_at).toLocaleDateString()}
                       </span>
                     </div>
-
-                    {/* ACTION BUTTONS (Only show if Pending) */}
                     {req.status === "pending" && (
                       <div className="flex gap-2 w-full sm:w-auto">
                         <button
@@ -197,12 +262,11 @@ const LandlordDashboard = () => {
                 </div>
               ) : (
                 myProperties.map((prop) => (
-                  <Link
-                    to={`/property/${prop.id}`}
+                  <div
                     key={prop.id}
-                    className="block group"
+                    className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-3 group hover:border-primary transition-colors"
                   >
-                    <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex gap-3 group-hover:border-primary transition-colors">
+                    <Link to={`/property/${prop.id}`} className="flex gap-3">
                       <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                         {prop.images && prop.images.length > 0 ? (
                           <img
@@ -224,19 +288,38 @@ const LandlordDashboard = () => {
                           ${prop.price_per_month}/mo
                         </p>
                         <div
-                          className={`text-xs font-bold ${
-                            prop.is_available
-                              ? "text-green-600"
-                              : "text-red-500"
-                          }`}
+                          className={`text-xs font-bold ${prop.is_available ? "text-green-600" : "text-red-500"}`}
                         >
                           {prop.is_available
                             ? "Active & Listed"
                             : "Marked as Taken"}
                         </div>
                       </div>
+                    </Link>
+
+                    <div className="flex border-t border-gray-100 pt-3 gap-2">
+                      <button
+                        onClick={() =>
+                          handleToggleAvailability(prop.id, prop.is_available)
+                        }
+                        className={`flex-1 flex justify-center items-center gap-1 py-1.5 rounded-md text-xs font-bold transition-colors border ${
+                          prop.is_available
+                            ? "border-orange-200 text-orange-600 hover:bg-orange-50"
+                            : "border-green-200 text-green-600 hover:bg-green-50"
+                        }`}
+                      >
+                        <Power size={14} />{" "}
+                        {prop.is_available ? "Pause Listing" : "Relist"}
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteProperty(prop.id)}
+                        className="flex justify-center items-center gap-1 px-3 py-1.5 rounded-md text-xs font-bold border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <Trash2 size={14} /> Delete
+                      </button>
                     </div>
-                  </Link>
+                  </div>
                 ))
               )}
             </div>
