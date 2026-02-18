@@ -14,11 +14,10 @@ import {
   Share2,
   Users,
   User,
-  Phone,
   Heart,
   Flag,
   X,
-} from "lucide-react";
+} from "lucide-react"; // Note: Removed 'Phone' from imports since we deleted it
 import L from "leaflet";
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
@@ -31,12 +30,25 @@ let DefaultIcon = L.icon({
   iconAnchor: [12, 41],
 });
 L.Marker.prototype.options.icon = DefaultIcon;
+
+// --- NEW: RED CAMPUS ICON ---
+const campusIcon = new L.Icon({
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
 const UNI_LAT = -20.165;
 const UNI_LNG = 28.642;
 
 const PropertyDetail = () => {
   const { id } = useParams();
-  const API_URL = import.meta.env.VITE_API_URL; // <-- The clean variable!
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -47,7 +59,6 @@ const PropertyDetail = () => {
   const [reviewStatus, setReviewStatus] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // REPORT STATE
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState("fake");
   const [reportDescription, setReportDescription] = useState("");
@@ -93,7 +104,7 @@ const PropertyDetail = () => {
         console.error(err);
         setLoading(false);
       });
-  }, [id]);
+  }, [id, API_URL]);
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
@@ -166,7 +177,6 @@ const PropertyDetail = () => {
   const shareMessage = `Hey, check out this student accommodation: ${property.title} - ${window.location.href}`;
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
 
-  // --- NEW: CALCULATE AVERAGE RATING ---
   const averageRating =
     property.reviews && property.reviews.length > 0
       ? (
@@ -240,7 +250,6 @@ const PropertyDetail = () => {
             <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-6 border border-gray-100">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  {/* --- NEW: ADDED THE AVERAGE RATING BADGE NEXT TO TITLE --- */}
                   <h1 className="text-3xl font-bold text-gray-900 mb-2 flex flex-wrap items-center gap-3">
                     {property.title}
                     {averageRating && (
@@ -309,12 +318,7 @@ const PropertyDetail = () => {
                     {property.landlord_bio ||
                       "This landlord hasn't added a bio yet. They are verified by CampusAcc."}
                   </p>
-                  {property.landlord_phone && (
-                    <div className="mt-3 inline-flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 shadow-sm">
-                      <Phone size={14} className="text-primary" />{" "}
-                      {property.landlord_phone}
-                    </div>
-                  )}
+                  {/* --- FIXED: PHONE NUMBER BLOCK COMPLETELY REMOVED --- */}
                 </div>
               </div>
 
@@ -327,19 +331,12 @@ const PropertyDetail = () => {
                 </p>
               </div>
 
+              {/* --- FIXED: AMENITIES REMOVED & TITLE CHANGED --- */}
               <div className="mb-8">
                 <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  What this place offers
+                  Tenant Requirements
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center text-gray-600 gap-3 p-3 bg-gray-50 rounded-lg">
-                    <Wifi className="text-primary" /> <span>Fast Wi-Fi</span>
-                  </div>
-                  <div className="flex items-center text-gray-600 gap-3 p-3 bg-gray-50 rounded-lg">
-                    <CheckCircle className="text-primary" />{" "}
-                    <span>Furnished</span>
-                  </div>
-
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center text-gray-600 gap-3 p-3 bg-gray-50 rounded-lg">
                     <Users
                       className={
@@ -376,8 +373,11 @@ const PropertyDetail = () => {
                       >
                         <Popup>{property.title}</Popup>
                       </Marker>
-                      <Marker position={[UNI_LAT, UNI_LNG]}>
-                        <Popup>Campus</Popup>
+                      {/* --- FIXED: RED CAMPUS MARKER --- */}
+                      <Marker position={[UNI_LAT, UNI_LNG]} icon={campusIcon}>
+                        <Popup>
+                          <b>NUST Campus</b>
+                        </Popup>
                       </Marker>
                     </MapContainer>
                   ) : (
@@ -515,7 +515,6 @@ const PropertyDetail = () => {
                     : "Save to Wishlist"}
                 </button>
 
-                {/* REPORT BUTTON */}
                 <div className="pt-6 border-t border-gray-100 mt-6">
                   <button
                     onClick={() => setIsReportModalOpen(true)}
@@ -538,7 +537,6 @@ const PropertyDetail = () => {
         price={property.price_per_month}
       />
 
-      {/* REPORT MODAL */}
       {isReportModalOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 relative shadow-2xl">

@@ -8,7 +8,7 @@ import {
   List,
   Map as MapIcon,
   Heart,
-  Star, // <-- Added Star
+  Star,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
@@ -25,7 +25,18 @@ let DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// --- FIXED: NUST COORDINATES ---
+// --- NEW: RED CAMPUS ICON ---
+const campusIcon = new L.Icon({
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
 const NUST_LAT = -20.165;
 const NUST_LNG = 28.642;
 
@@ -36,16 +47,17 @@ const Listings = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState("list");
 
+  // --- NEW: ADDED maxDistance STATE ---
   const [filters, setFilters] = useState({
     maxPrice: 500,
     search: "",
     onlyAvailable: false,
     gender: "All",
+    maxDistance: 100,
   });
 
-  // --- NEW: DISTANCE CALCULATOR ---
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    if (!lat2 || !lon2) return null; // Prevents the 14,000km glitch!
+    if (!lat2 || !lon2) return null;
     const R = 6371;
     const dLat = (lat2 - lat1) * (Math.PI / 180);
     const dLon = (lon2 - lon1) * (Math.PI / 180);
@@ -66,7 +78,6 @@ const Listings = () => {
     axios
       .get(import.meta.env.VITE_API_URL + "/api/properties/", { headers })
       .then((res) => {
-        // PROCESS DISTANCE AND RATINGS IMMEDIATELY
         const processedProperties = res.data.map((p) => {
           const avgRating =
             p.reviews && p.reviews.length > 0
@@ -111,6 +122,13 @@ const Listings = () => {
     if (filters.onlyAvailable) result = result.filter((p) => p.is_available);
     if (filters.gender !== "All")
       result = result.filter((p) => p.gender_preference === filters.gender);
+
+    // --- NEW: DISTANCE FILTER LOGIC ---
+    result = result.filter(
+      (p) =>
+        !p.calculatedDistance ||
+        parseFloat(p.calculatedDistance) <= filters.maxDistance,
+    );
 
     setFilteredProperties(result);
   }, [filters, properties]);
@@ -180,7 +198,7 @@ const Listings = () => {
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-24">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                  <Filter size={20} /> Filters
+                  <Filter size={100} /> Filters
                 </h3>
                 <button
                   onClick={() =>
@@ -189,6 +207,7 @@ const Listings = () => {
                       search: "",
                       onlyAvailable: false,
                       gender: "All",
+                      maxDistance: 100,
                     })
                   }
                   className="text-xs text-primary font-medium hover:underline"
@@ -240,6 +259,29 @@ const Listings = () => {
                 />
               </div>
 
+              {/* --- NEW: DISTANCE SLIDER --- */}
+              <div className="mb-6">
+                <div className="flex justify-between mb-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Max Distance
+                  </label>
+                  <span className="text-sm font-bold text-primary">
+                    {filters.maxDistance} km
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="100"
+                  step="1"
+                  value={filters.maxDistance}
+                  onChange={(e) =>
+                    handleFilterChange("maxDistance", e.target.value)
+                  }
+                  className="w-full h-2 bg-gray-200 rounded-lg accent-primary"
+                />
+              </div>
+
               <div className="mb-6">
                 <label className="text-sm font-medium text-gray-700 block mb-2">
                   Tenant Preference
@@ -278,7 +320,9 @@ const Listings = () => {
             {loading ? (
               <div className="flex justify-center py-20">Loading...</div>
             ) : filteredProperties.length === 0 ? (
-              <div className="text-center py-20">No homes found.</div>
+              <div className="text-center py-20">
+                No homes found in this range.
+              </div>
             ) : (
               <>
                 {viewMode === "list" && (
@@ -302,7 +346,6 @@ const Listings = () => {
                               </div>
                             )}
 
-                            {/* TOP BADGES */}
                             <div className="absolute top-3 left-3 flex flex-col gap-2">
                               {property.averageRating && (
                                 <div className="bg-white/90 px-2 py-1 rounded shadow-sm text-xs font-bold text-yellow-600 flex items-center gap-1">
@@ -315,12 +358,10 @@ const Listings = () => {
                               )}
                             </div>
 
-                            {/* PRICE TAG */}
                             <div className="absolute bottom-2 left-2 bg-white/95 px-2 py-1 rounded shadow-sm text-sm font-bold text-gray-900">
                               ${property.price_per_month}/mo
                             </div>
 
-                            {/* HEART BUTTON */}
                             <button
                               onClick={(e) =>
                                 handleFavoriteToggle(e, property.id)
@@ -376,7 +417,6 @@ const Listings = () => {
                   </div>
                 )}
 
-                {/* --- RESTORED MAP VIEW --- */}
                 {viewMode === "map" && (
                   <div className="h-[600px] bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative z-0">
                     <MapContainer
@@ -385,11 +425,14 @@ const Listings = () => {
                       style={{ height: "100%", width: "100%" }}
                     >
                       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                      <Marker position={[NUST_LAT, NUST_LNG]}>
+
+                      {/* --- NEW: RED CAMPUS MARKER --- */}
+                      <Marker position={[NUST_LAT, NUST_LNG]} icon={campusIcon}>
                         <Popup>
                           <b>NUST Campus</b>
                         </Popup>
                       </Marker>
+
                       {filteredProperties.map((property) =>
                         property.latitude && property.longitude ? (
                           <Marker
@@ -420,4 +463,3 @@ const Listings = () => {
   );
 };
 export default Listings;
-// fatal error at previous commit due to network issues trying to recommit now

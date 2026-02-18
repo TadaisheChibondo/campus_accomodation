@@ -8,12 +8,16 @@ import {
   XCircle,
   Home,
   ArrowRight,
+  Trash2, // <--- NEW ICON
 } from "lucide-react";
 import { motion } from "framer-motion";
 
 const MyBookings = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // --- NEW: CLEAN API VARIABLE ---
+  const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -24,12 +28,9 @@ const MyBookings = () => {
       }
 
       try {
-        const res = await axios.get(
-          import.meta.env.VITE_API_URL + "/api/bookings/",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
+        const res = await axios.get(`${API_URL}/api/bookings/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setBookings(res.data);
       } catch (err) {
         console.error("Failed to fetch bookings", err);
@@ -39,11 +40,33 @@ const MyBookings = () => {
     };
 
     fetchBookings();
-  }, []);
+  }, [API_URL]);
+
+  // --- NEW: DELETE HANDLER ---
+  const handleDeleteBooking = async (bookingId) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this request? This cannot be undone.",
+      )
+    ) {
+      return;
+    }
+
+    const token = localStorage.getItem("access_token");
+    try {
+      await axios.delete(`${API_URL}/api/bookings/${bookingId}/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // Remove it from the screen instantly without reloading
+      setBookings((prev) => prev.filter((b) => b.id !== bookingId));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete the request. Please try again.");
+    }
+  };
 
   // Helper for Status Badges
   const getStatusBadge = (status) => {
-    // FIX: Normalize the string to lowercase so "Accepted", "ACCEPTED", and "accepted" all work!
     const normalizedStatus = status ? status.toLowerCase() : "pending";
 
     switch (normalizedStatus) {
@@ -112,7 +135,7 @@ const MyBookings = () => {
                 transition={{ delay: index * 0.1 }}
                 className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-col md:flex-row justify-between md:items-center gap-4"
               >
-                <div>
+                <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <h3 className="text-lg font-bold text-gray-900">
                       {booking.property_title}
@@ -141,12 +164,21 @@ const MyBookings = () => {
                   )}
                 </div>
 
-                <Link
-                  to={`/property/${booking.property}`}
-                  className="text-primary font-semibold text-sm hover:underline whitespace-nowrap self-start md:self-center"
-                >
-                  View Property &rarr;
-                </Link>
+                {/* --- NEW ACTION BUTTONS --- */}
+                <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-3 mt-4 md:mt-0 border-t md:border-t-0 pt-4 md:pt-0 border-gray-100">
+                  <Link
+                    to={`/property/${booking.property}`}
+                    className="text-primary font-semibold text-sm hover:underline whitespace-nowrap"
+                  >
+                    View Property &rarr;
+                  </Link>
+                  <button
+                    onClick={() => handleDeleteBooking(booking.id)}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-bold border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 size={14} /> Cancel Request
+                  </button>
+                </div>
               </motion.div>
             ))}
           </div>
