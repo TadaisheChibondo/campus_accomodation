@@ -10,9 +10,9 @@ import {
   Loader2,
   Trash2,
   Power,
-  BookOpen, // <--- NEW ICON
-  GraduationCap, // <--- NEW ICON
-  Phone, // <--- NEW ICON
+  BookOpen,
+  GraduationCap,
+  Phone,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -21,6 +21,9 @@ const LandlordDashboard = () => {
   const [myProperties, setMyProperties] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // --- NEW: CLEAN API VARIABLE ---
+  const API_URL = import.meta.env.VITE_API_URL;
+
   // FETCH DATA
   useEffect(() => {
     const fetchData = async () => {
@@ -28,16 +31,13 @@ const LandlordDashboard = () => {
       if (!token) return;
 
       try {
-        const reqRes = await axios.get(
-          import.meta.env.VITE_API_URL + "/api/bookings/manage/",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
+        const reqRes = await axios.get(`${API_URL}/api/bookings/manage/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setRequests(reqRes.data);
 
         const propRes = await axios.get(
-          import.meta.env.VITE_API_URL + "/api/properties/my_listings/",
+          `${API_URL}/api/properties/my_listings/`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -50,14 +50,14 @@ const LandlordDashboard = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [API_URL]); // Added API_URL to dependency array for best practices
 
   // HANDLE BOOKING ACCEPT/REJECT
   const handleStatusUpdate = async (bookingId, newStatus) => {
     const token = localStorage.getItem("access_token");
     try {
       await axios.patch(
-        `import.meta.env.VITE_API_URL/api/bookings/${bookingId}/`,
+        `${API_URL}/api/bookings/${bookingId}/`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -82,12 +82,9 @@ const LandlordDashboard = () => {
 
     const token = localStorage.getItem("access_token");
     try {
-      await axios.delete(
-        `import.meta.env.VITE_API_URL/api/properties/${propertyId}/`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      await axios.delete(`${API_URL}/api/properties/${propertyId}/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setMyProperties((prev) => prev.filter((p) => p.id !== propertyId));
     } catch (err) {
       alert("Failed to delete property.");
@@ -99,7 +96,7 @@ const LandlordDashboard = () => {
     const token = localStorage.getItem("access_token");
     try {
       await axios.patch(
-        `import.meta.env.VITE_API_URL/api/properties/${propertyId}/`,
+        `${API_URL}/api/properties/${propertyId}/`,
         { is_available: !currentStatus },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -181,7 +178,7 @@ const LandlordDashboard = () => {
                     </div>
                   </div>
 
-                  {/* --- NEW: STUDENT PROFILE INFO DISPLAY --- */}
+                  {/* STUDENT PROFILE INFO DISPLAY */}
                   <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="bg-blue-50/50 p-3 rounded-xl border border-blue-100 flex items-center gap-2">
                       <BookOpen size={16} className="text-blue-600" />
