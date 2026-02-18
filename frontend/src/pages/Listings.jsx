@@ -8,7 +8,8 @@ import {
   List,
   Map as MapIcon,
   Heart,
-} from "lucide-react"; // <-- Added Heart
+  Star, // <-- Added Star
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -23,7 +24,10 @@ let DefaultIcon = L.icon({
   iconAnchor: [12, 41],
 });
 L.Marker.prototype.options.icon = DefaultIcon;
-const DEFAULT_CENTER = [-17.784, 31.053];
+
+// --- FIXED: NUST COORDINATES ---
+const NUST_LAT = -20.165;
+const NUST_LNG = 28.642;
 
 const Listings = () => {
   const [properties, setProperties] = useState([]);
@@ -39,16 +43,53 @@ const Listings = () => {
     gender: "All",
   });
 
+  // --- NEW: DISTANCE CALCULATOR ---
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    if (!lat2 || !lon2) return null; // Prevents the 14,000km glitch!
+    const R = 6371;
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) *
+        Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return (R * c).toFixed(1);
+  };
+
   useEffect(() => {
-    // We must pass the token so the backend knows to check the "is_favorited" field for THIS user!
     const token = localStorage.getItem("access_token");
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
     axios
       .get(import.meta.env.VITE_API_URL + "/api/properties/", { headers })
       .then((res) => {
-        setProperties(res.data);
-        setFilteredProperties(res.data);
+        // PROCESS DISTANCE AND RATINGS IMMEDIATELY
+        const processedProperties = res.data.map((p) => {
+          const avgRating =
+            p.reviews && p.reviews.length > 0
+              ? (
+                  p.reviews.reduce((sum, r) => sum + r.rating, 0) /
+                  p.reviews.length
+                ).toFixed(1)
+              : null;
+
+          return {
+            ...p,
+            calculatedDistance: calculateDistance(
+              NUST_LAT,
+              NUST_LNG,
+              p.latitude,
+              p.longitude,
+            ),
+            averageRating: avgRating,
+          };
+        });
+
+        setProperties(processedProperties);
+        setFilteredProperties(processedProperties);
         setLoading(false);
       })
       .catch((err) => console.error(err));
@@ -77,23 +118,18 @@ const Listings = () => {
   const handleFilterChange = (key, value) =>
     setFilters((prev) => ({ ...prev, [key]: value }));
 
-  // --- NEW: HANDLE TOGGLING THE FAVORITE HEART ---
   const handleFavoriteToggle = async (e, propertyId) => {
-    e.preventDefault(); // Prevents clicking the heart from opening the property page
+    e.preventDefault();
     const token = localStorage.getItem("access_token");
 
     if (!token) return alert("Please log in to save properties!");
 
     try {
       const res = await axios.post(
-        `import.meta.env.VITE_API_URL/api/properties/${propertyId}/favorite/`,
+        `${import.meta.env.VITE_API_URL}/api/properties/${propertyId}/favorite/`,
         {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
+        { headers: { Authorization: `Bearer ${token}` } },
       );
-
-      // Update the heart color instantly in the UI
       const updatedProps = properties.map((p) =>
         p.id === propertyId ? { ...p, is_favorited: res.data.is_favorited } : p,
       );
@@ -252,9 +288,9 @@ const Listings = () => {
                         <motion.div
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden border border-gray-100 group relative"
+                          className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden border border-gray-100 group relative flex flex-col h-full"
                         >
-                          <div className="relative h-48 bg-gray-200 overflow-hidden">
+                          <div className="relative h-48 bg-gray-200 overflow-hidden flex-shrink-0">
                             {property.images && property.images.length > 0 ? (
                               <img
                                 src={property.images[0].image}
@@ -265,11 +301,26 @@ const Listings = () => {
                                 No Image
                               </div>
                             )}
-                            <div className="absolute bottom-2 left-2 bg-white/90 px-2 py-1 rounded text-xs font-bold text-gray-900">
+
+                            {/* TOP BADGES */}
+                            <div className="absolute top-3 left-3 flex flex-col gap-2">
+                              {property.averageRating && (
+                                <div className="bg-white/90 px-2 py-1 rounded shadow-sm text-xs font-bold text-yellow-600 flex items-center gap-1">
+                                  <Star
+                                    size={12}
+                                    className="fill-yellow-400 text-yellow-400"
+                                  />
+                                  {property.averageRating}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* PRICE TAG */}
+                            <div className="absolute bottom-2 left-2 bg-white/95 px-2 py-1 rounded shadow-sm text-sm font-bold text-gray-900">
                               ${property.price_per_month}/mo
                             </div>
 
-                            {/* --- NEW: THE HEART BUTTON --- */}
+                            {/* HEART BUTTON */}
                             <button
                               onClick={(e) =>
                                 handleFavoriteToggle(e, property.id)
@@ -286,8 +337,9 @@ const Listings = () => {
                               />
                             </button>
                           </div>
-                          <div className="p-4">
-                            <div className="flex justify-between items-start gap-2">
+
+                          <div className="p-4 flex flex-col flex-grow">
+                            <div className="flex justify-between items-start gap-2 mb-1">
                               <h3 className="font-bold text-gray-900 truncate flex-1">
                                 {property.title}
                               </h3>
@@ -299,22 +351,66 @@ const Listings = () => {
                                     {property.gender_preference}
                                   </span>
                                 )}
-                              {property.distance && (
-                                <span className="flex-shrink-0 text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md flex items-center gap-1">
-                                  <MapPin size={12} /> {property.distance} km
+                            </div>
+
+                            <p className="text-sm text-gray-500 truncate mb-3">
+                              {property.address}
+                            </p>
+
+                            <div className="mt-auto flex justify-between items-center">
+                              {property.calculatedDistance ? (
+                                <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md flex items-center gap-1">
+                                  <MapPin size={12} />{" "}
+                                  {property.calculatedDistance} km to NUST
+                                </span>
+                              ) : (
+                                <span className="text-xs text-gray-400 italic">
+                                  Location unknown
                                 </span>
                               )}
                             </div>
-                            <p className="text-sm text-gray-500 truncate mt-1">
-                              {property.address}
-                            </p>
                           </div>
                         </motion.div>
                       </Link>
                     ))}
                   </div>
                 )}
-                {/* (Map View Code remains the same) */}
+
+                {/* --- RESTORED MAP VIEW --- */}
+                {viewMode === "map" && (
+                  <div className="h-[600px] bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative z-0">
+                    <MapContainer
+                      center={[NUST_LAT, NUST_LNG]}
+                      zoom={13}
+                      style={{ height: "100%", width: "100%" }}
+                    >
+                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                      <Marker position={[NUST_LAT, NUST_LNG]}>
+                        <Popup>
+                          <b>NUST Campus</b>
+                        </Popup>
+                      </Marker>
+                      {filteredProperties.map((property) =>
+                        property.latitude && property.longitude ? (
+                          <Marker
+                            key={property.id}
+                            position={[property.latitude, property.longitude]}
+                          >
+                            <Popup>
+                              <Link
+                                to={`/property/${property.id}`}
+                                className="font-bold text-primary hover:underline"
+                              >
+                                {property.title}
+                              </Link>
+                              <br />${property.price_per_month}/mo
+                            </Popup>
+                          </Marker>
+                        ) : null,
+                      )}
+                    </MapContainer>
+                  </div>
+                )}
               </>
             )}
           </div>
