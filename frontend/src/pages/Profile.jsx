@@ -13,6 +13,9 @@ import {
 } from "lucide-react";
 
 const Profile = () => {
+  // --- FIXED: Standardized API URL variable ---
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const [profile, setProfile] = useState({
     username: "",
     email: "",
@@ -38,12 +41,10 @@ const Profile = () => {
         return;
       }
       try {
-        const res = await axios.get(
-          import.meta.env.VITE_API_URL + "/api/user/info/",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
+        // --- FIXED: Using backticks and template literals ---
+        const res = await axios.get(`${API_URL}/api/user/info/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setProfile({
           username: res.data.username || "",
           email: res.data.email || "",
@@ -63,7 +64,7 @@ const Profile = () => {
       }
     };
     fetchProfile();
-  }, []);
+  }, [API_URL]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -96,16 +97,13 @@ const Profile = () => {
     }
 
     try {
-      const res = await axios.patch(
-        import.meta.env.VITE_API_URL + "/api/user/info/",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
+      // --- FIXED: Using backticks and template literals ---
+      const res = await axios.patch(`${API_URL}/api/user/info/`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
         },
-      );
+      });
       setMessage("Profile updated successfully!");
       setProfile((prev) => ({
         ...prev,
