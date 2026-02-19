@@ -1,10 +1,9 @@
 from django.db import models
-from django.contrib.auth.models import User # Using Django's built-in user for now
+from django.contrib.auth.models import User 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.validators import MinValueValidator, MaxValueValidator
 
-# Create your models here.
 
 class Property(models.Model):
     landlord = models.ForeignKey(User, on_delete=models.CASCADE, related_name='properties')
@@ -17,37 +16,42 @@ class Property(models.Model):
     gender_preference = models.CharField(max_length=10, choices=[('Mixed', 'Mixed (Gents & Ladies)'), ('Gents', 'Gents Only'), ('Ladies', 'Ladies Only')], default='Mixed')
     is_available = models.BooleanField(default=True)
     
-    # --- NEW: FAVORITES RELATIONSHIP ---
     favorited_by = models.ManyToManyField(User, related_name='favorite_properties', blank=True)
+    has_wifi = models.BooleanField(default=False, verbose_name="Wi-Fi")
+    has_borehole = models.BooleanField(default=False, verbose_name="Borehole / Backup Water")
+    has_solar = models.BooleanField(default=False, verbose_name="Solar Power")
+    
+    curfew = models.CharField(max_length=100, blank=True, null=True, help_text="e.g. 10:00 PM (Leave blank if none)")
+    visitors_allowed = models.BooleanField(default=True, verbose_name="Visitors Allowed")
+    deposit_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Enter 0 if no deposit")
     
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.title} - ${self.price_per_month}"
     
-# We need a separate model for Images so a house can have MULTIPLE pictures
+
 class PropertyImage(models.Model):
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='property_photos/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    room = models.ForeignKey('Room', on_delete=models.CASCADE, related_name='room_images', null=True, blank=True)
 
     def __str__(self):
         return f"Image for {self.property.title}"
 
-# listings/models.py (Add this to the bottom)
 
-from django.core.validators import MinValueValidator, MaxValueValidator
+# --- NEW: ROOM MODEL ---
+class Room(models.Model):
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='rooms')
+    label = models.CharField(max_length=100, help_text="e.g., 'Room 1', 'Master Bedroom'")
+    capacity = models.IntegerField(default=1, help_text="Number of people per room")
+    is_available = models.BooleanField(default=True)
 
-# class Review(models.Model):
-#     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='reviews')
-#     user = models.ForeignKey(User, on_delete=models.CASCADE) # The student writing the review
-#     rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)]) # 1 to 5 stars
-#     comment = models.TextField()
-#     created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"{self.property.title} - {self.label} ({self.capacity} heads)"
 
-#     def __str__(self):
-#         return f"{self.rating} stars for {self.property.title}"
-    
+
 class Review(models.Model):
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='reviews')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -55,15 +59,12 @@ class Review(models.Model):
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # --- ADD THIS CLASS META ---
     class Meta:
-        # This ensures one user can only review a specific property ONCE
         unique_together = ('user', 'property')
 
     def __str__(self):
         return f"{self.user.username} - {self.property.title}"
 
-# ... your existing Property model is here ...
 
 class Booking(models.Model):
     STATUS_CHOICES = [
@@ -73,6 +74,10 @@ class Booking(models.Model):
     ]
 
     property = models.ForeignKey('Property', on_delete=models.CASCADE, related_name='bookings')
+    
+    # --- NEW: LINK BOOKING TO A SPECIFIC ROOM ---
+    room = models.ForeignKey(Room, on_delete=models.SET_NULL, null=True, blank=True, related_name='bookings')
+    
     student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='my_bookings')
     move_in_date = models.DateField()
     message = models.TextField(blank=True)
@@ -83,11 +88,6 @@ class Booking(models.Model):
         return f"{self.student.username} -> {self.property.title} ({self.status})"
     
 
-# ... (Your existing Property model) ...
-
-# 1. NEW MODEL: Stores the Role
-# 1. NEW MODEL: Stores the Role and Profile Data
-# 1. NEW MODEL: Stores the Role and Profile Data
 class Profile(models.Model):
     ROLE_CHOICES = [
         ('student', 'Student'),
@@ -96,22 +96,19 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='student')
     
-    # --- SHARED FIELDS ---
     profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True)
     
-    # --- STUDENT ONLY FIELDS ---
     program = models.CharField(max_length=100, blank=True, help_text="e.g. Computer Science")
     year_of_study = models.CharField(max_length=20, blank=True, help_text="e.g. Year 2")
 
-    # --- NEW: LANDLORD ONLY FIELDS ---
     bio = models.TextField(blank=True, help_text="Tell students about yourself or your property rules.")
     company_name = models.CharField(max_length=100, blank=True, help_text="Optional: If you operate as a business.")
 
     def __str__(self):
         return f"{self.user.username} - {self.role}"
     
-# 2. SIGNAL: Automatically create a Profile when a User registers
+
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
@@ -121,7 +118,7 @@ def create_user_profile(sender, instance, created, **kwargs):
 def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
 
-# --- NEW: REPORTING SYSTEM ---
+
 class Report(models.Model):
     REASON_CHOICES = [
         ('fake', 'Fake Listing / Scam'),
@@ -138,4 +135,3 @@ class Report(models.Model):
 
     def __str__(self):
         return f"Report by {self.reporter.username} on {self.property.title}"
-    

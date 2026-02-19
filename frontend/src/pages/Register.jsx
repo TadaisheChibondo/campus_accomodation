@@ -8,54 +8,93 @@ import {
   Building,
   GraduationCap,
   Loader2,
+  Phone,
+  BookOpen,
+  FileText,
 } from "lucide-react";
 
 const Register = () => {
+  const API_URL = import.meta.env.VITE_API_URL;
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
     role: "student", // Default
+    phone_number: "",
+    program: "",
+    year_of_study: "",
+    company_name: "",
+    bio: "",
+    termsAccepted: false, // <--- NEW: Ts & Cs Checkbox State
   });
+
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(""); // For displaying errors inline
-  const navigate = useNavigate();
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // 1. T&C Validation
+    if (!formData.termsAccepted) {
+      setError("You must accept the Terms and Conditions to continue.");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
     try {
-      // 1. REGISTER THE USER
-      await axios.post(
-        import.meta.env.VITE_API_URL + "/api/register/",
-        formData,
-      );
+      // 2. REGISTER THE USER
+      await axios.post(`${API_URL}/api/register/`, {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+      });
 
-      // 2. AUTO-LOGIN (Get Token)
-      const loginRes = await axios.post(
-        import.meta.env.VITE_API_URL + "/api/token/",
-        {
-          username: formData.username,
-          password: formData.password,
-        },
-      );
+      // 3. AUTO-LOGIN (Get Token)
+      const loginRes = await axios.post(`${API_URL}/api/token/`, {
+        username: formData.username,
+        password: formData.password,
+      });
 
       const accessToken = loginRes.data.access;
       const refreshToken = loginRes.data.refresh;
 
-      // 3. SAVE TO STORAGE
+      // 4. AUTO-UPDATE PROFILE DETAILS
+      // We use FormData here because your backend Profile endpoint expects it
+      const profilePayload = new FormData();
+      profilePayload.append("phone_number", formData.phone_number);
+
+      if (formData.role === "student") {
+        profilePayload.append("program", formData.program);
+        profilePayload.append("year_of_study", formData.year_of_study);
+      } else {
+        if (formData.company_name)
+          profilePayload.append("company_name", formData.company_name);
+        if (formData.bio) profilePayload.append("bio", formData.bio);
+      }
+
+      await axios.patch(`${API_URL}/api/user/info/`, profilePayload, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      // 5. SAVE TO STORAGE
       localStorage.setItem("access_token", accessToken);
       localStorage.setItem("refresh_token", refreshToken);
       localStorage.setItem("username", formData.username);
-      localStorage.setItem("role", formData.role); // We already know the role from the form!
+      localStorage.setItem("role", formData.role);
 
-      // 4. REDIRECT BASED ON ROLE
+      // 6. REDIRECT BASED ON ROLE
       if (formData.role === "landlord") {
         navigate("/dashboard");
       } else {
-        navigate("/"); // Students go to Home
+        navigate("/");
       }
     } catch (err) {
       console.error(err);
@@ -70,70 +109,72 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
+    // Added py-12 and my-8 so the taller form doesn't get cut off on small screens
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg border border-gray-100 my-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Create Account</h1>
           <p className="text-gray-500 mt-2">Join CampusAcc today</p>
         </div>
 
         {error && (
-          <div className="mb-6 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 text-center">
+          <div className="mb-6 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 text-center font-medium">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Username */}
-          <div className="relative">
-            <User className="absolute left-3 top-3 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Username"
-              required
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
-              value={formData.username}
-              onChange={(e) =>
-                setFormData({ ...formData, username: e.target.value })
-              }
-            />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* SECTION 1: ACCOUNT DETAILS */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider border-b pb-2">
+              Account Login
+            </h3>
+            <div className="relative">
+              <User className="absolute left-3 top-3 text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="Username"
+                required
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
+                value={formData.username}
+                onChange={(e) =>
+                  setFormData({ ...formData, username: e.target.value })
+                }
+              />
+            </div>
+            <div className="relative">
+              <Mail className="absolute left-3 top-3 text-gray-400" size={20} />
+              <input
+                type="email"
+                placeholder="Email Address"
+                required
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+              />
+            </div>
+            <div className="relative">
+              <Lock className="absolute left-3 top-3 text-gray-400" size={20} />
+              <input
+                type="password"
+                placeholder="Password"
+                required
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+              />
+            </div>
           </div>
 
-          {/* Email */}
-          <div className="relative">
-            <Mail className="absolute left-3 top-3 text-gray-400" size={20} />
-            <input
-              type="email"
-              placeholder="Email Address"
-              required
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-            />
-          </div>
-
-          {/* Password */}
-          <div className="relative">
-            <Lock className="absolute left-3 top-3 text-gray-400" size={20} />
-            <input
-              type="password"
-              placeholder="Password"
-              required
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
-              value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
-            />
-          </div>
-
-          {/* ROLE SELECTOR */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              I am a:
-            </label>
+          {/* SECTION 2: ROLE SELECTOR */}
+          <div className="pt-2">
+            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider border-b pb-2 mb-4">
+              I am a...
+            </h3>
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
@@ -163,12 +204,146 @@ const Register = () => {
             </div>
           </div>
 
+          {/* SECTION 3: DYNAMIC PROFILE DETAILS */}
+          <div className="space-y-4 pt-2">
+            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider border-b pb-2">
+              Profile Details
+            </h3>
+
+            <div className="relative">
+              <Phone
+                className="absolute left-3 top-3 text-gray-400"
+                size={20}
+              />
+              <input
+                type="text"
+                placeholder="Phone Number (e.g. +263 77...)"
+                required
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
+                value={formData.phone_number}
+                onChange={(e) =>
+                  setFormData({ ...formData, phone_number: e.target.value })
+                }
+              />
+            </div>
+
+            {formData.role === "student" ? (
+              <>
+                <div className="relative">
+                  <BookOpen
+                    className="absolute left-3 top-3 text-gray-400"
+                    size={20}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Program of Study (e.g. Computer Science)"
+                    required
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
+                    value={formData.program}
+                    onChange={(e) =>
+                      setFormData({ ...formData, program: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="relative">
+                  <GraduationCap
+                    className="absolute left-3 top-3 text-gray-400"
+                    size={20}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Year of Study (e.g. Year 2)"
+                    required
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
+                    value={formData.year_of_study}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        year_of_study: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="relative">
+                  <Building
+                    className="absolute left-3 top-3 text-gray-400"
+                    size={20}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Company/Agency Name (Optional)"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
+                    value={formData.company_name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, company_name: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="relative">
+                  <FileText
+                    className="absolute left-3 top-3 text-gray-400"
+                    size={20}
+                  />
+                  <textarea
+                    placeholder="Tell students about your rules or agency..."
+                    required
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none h-20 resize-none"
+                    value={formData.bio}
+                    onChange={(e) =>
+                      setFormData({ ...formData, bio: e.target.value })
+                    }
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* SECTION 4: TERMS AND CONDITIONS */}
+          <div className="pt-2">
+            <label className="flex items-start space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                required
+                checked={formData.termsAccepted}
+                onChange={(e) =>
+                  setFormData({ ...formData, termsAccepted: e.target.checked })
+                }
+                className="mt-1 w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary cursor-pointer"
+              />
+              <span className="text-gray-600 text-sm leading-relaxed">
+                I agree to the{" "}
+                <Link
+                  to="#"
+                  className="text-primary hover:underline font-medium"
+                >
+                  Terms & Conditions
+                </Link>{" "}
+                and{" "}
+                <Link
+                  to="#"
+                  className="text-primary hover:underline font-medium"
+                >
+                  Privacy Policy
+                </Link>
+                . I understand that providing false information may result in an
+                account ban.
+              </span>
+            </label>
+          </div>
+
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2"
+            className={`w-full text-white font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2 ${
+              loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-primary hover:bg-blue-700 shadow-lg shadow-blue-500/30"
+            }`}
           >
-            {loading ? <Loader2 className="animate-spin" /> : "Sign Up"}
+            {loading ? <Loader2 className="animate-spin" /> : "Create Account"}
           </button>
         </form>
 

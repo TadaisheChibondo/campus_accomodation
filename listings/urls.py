@@ -13,6 +13,8 @@ from .views import (
     UserInfoView,
     RequestPasswordResetView,   # <--- ADD THIS
     PasswordResetConfirmView,
+    RoomCreateView,
+    RoomDetailView,
 )
 
 # 1. The Router handles all the standard "CRUD" URLs automatically
@@ -41,4 +43,6 @@ urlpatterns = [
     # Password Reset
     path('password-reset/', RequestPasswordResetView.as_view(), name='password_reset'),
     path('password-reset-confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('rooms/', RoomCreateView.as_view(), name='create-room'),
+    path('rooms/<int:pk>/', RoomDetailView.as_view(), name='room-detail'),
 ]

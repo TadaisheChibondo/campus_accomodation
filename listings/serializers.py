@@ -1,44 +1,42 @@
 from rest_framework import serializers
-from .models import Property, PropertyImage, Review, Booking, Profile
+# --- IMPORT ROOM HERE ---
+from .models import Property, PropertyImage, Review, Booking, Profile, Room
 from django.contrib.auth.models import User
 import math
 
-# --- CONSTANTS: Coordinates of the University ---
-UNI_LAT = -17.784
-UNI_LNG = 31.053
+UNI_LAT = -20.165
+UNI_LNG = 28.642
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
-    role = serializers.CharField(write_only=True, required=False) # Accept 'role' from frontend
+    role = serializers.CharField(write_only=True, required=False) 
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'role'] # Add role here
+        fields = ['id', 'username', 'email', 'password', 'role'] 
 
     def create(self, validated_data):
-        # Extract role from data (default to student if missing)
         role = validated_data.pop('role', 'student')
-        
-        # Create User
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data.get('email', ''),
             password=validated_data['password']
         )
-
-        # Update the Profile with the correct role
         user.profile.role = role
         user.profile.save()
-        
         return user
     
 class PropertyImageSerializer(serializers.ModelSerializer):
+    # --- NEW: Fetch the text label of the room ---
+    room_label = serializers.ReadOnlyField(source='room.label') 
+
     class Meta:
         model = PropertyImage
-        fields = ['id', 'image', 'property']
+        # --- FIXED: Add 'room_label' to the fields array ---
+        fields = ['id', 'image', 'property', 'room', 'room_label']
 
 class ReviewSerializer(serializers.ModelSerializer):
-    user = serializers.ReadOnlyField(source='user.username') # Show username, don't ask for ID
+    user = serializers.ReadOnlyField(source='user.username') 
 
     class Meta:
         model = Review
@@ -50,8 +48,15 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        # --- ADDED: bio and company_name ---
         fields = ['username', 'email', 'role', 'profile_picture', 'phone_number', 'program', 'year_of_study', 'bio', 'company_name']
+
+
+# --- NEW: ROOM SERIALIZER ---
+class RoomSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Room
+        fields = ['id', 'property', 'label', 'capacity', 'is_available']
+
 
 class PropertySerializer(serializers.ModelSerializer):
     images = PropertyImageSerializer(many=True, read_only=True)
@@ -64,8 +69,10 @@ class PropertySerializer(serializers.ModelSerializer):
     landlord_bio = serializers.CharField(source='landlord.profile.bio', read_only=True)
     landlord_company = serializers.CharField(source='landlord.profile.company_name', read_only=True)
 
-    # --- NEW: IS FAVORITED FIELD ---
     is_favorited = serializers.SerializerMethodField()
+    
+    # --- NEW: NEST THE ROOMS INSIDE THE PROPERTY ---
+    rooms = RoomSerializer(many=True, read_only=True)
 
     class Meta:
         model = Property
@@ -74,19 +81,18 @@ class PropertySerializer(serializers.ModelSerializer):
             'address', 'latitude', 'longitude', 'is_available', 'images', 
             'reviews', 'created_at', 'distance', 'gender_preference', 
             'landlord_profile_picture', 'landlord_phone', 'landlord_bio', 'landlord_company',
-            'is_favorited' # <--- ADDED TO FIELDS LIST
+            'is_favorited', 'rooms', # <--- ADDED 'rooms'
+            'has_wifi', 'has_borehole', 'has_solar', 
+            'curfew', 'visitors_allowed', 'deposit_amount',
         ]
         read_only_fields = ['landlord', 'created_at']
 
-    # --- NEW: MATH LOGIC TO CHECK IF LOGGED IN USER LIKED IT ---
     def get_is_favorited(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             return obj.favorited_by.filter(id=request.user.id).exists()
         return False
 
-    # (Keep your get_distance logic right below here as normal)
-    # THE MATH LOGIC FOR DISTANCE
     def get_distance(self, obj):
         if not obj.latitude or not obj.longitude:
             return None
@@ -109,6 +115,9 @@ class BookingSerializer(serializers.ModelSerializer):
     student_name = serializers.ReadOnlyField(source='student.username')
     property_title = serializers.ReadOnlyField(source='property.title')
     
+    # --- NEW: EXPOSE THE ROOM LABEL FOR THE DASHBOARDS ---
+    room_label = serializers.ReadOnlyField(source='room.label')
+    
     student_program = serializers.ReadOnlyField(source='student.profile.program')
     student_year = serializers.ReadOnlyField(source='student.profile.year_of_study')
     student_phone = serializers.ReadOnlyField(source='student.profile.phone_number')
@@ -116,7 +125,7 @@ class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = [
-            'id', 'property', 'property_title', 'student', 'student_name', 
+            'id', 'property', 'property_title', 'room', 'room_label', 'student', 'student_name', 
             'student_program', 'student_year', 'student_phone', 
             'move_in_date', 'message', 'status', 'created_at'
         ]

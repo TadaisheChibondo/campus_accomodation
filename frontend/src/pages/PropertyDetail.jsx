@@ -5,7 +5,6 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import {
   MapPin,
-  Wifi,
   CheckCircle,
   ArrowLeft,
   Star,
@@ -17,7 +16,12 @@ import {
   Heart,
   Flag,
   X,
-} from "lucide-react"; // Note: Removed 'Phone' from imports since we deleted it
+  Wifi, // New
+  Sun, // New
+  Droplets, // New
+  Clock, // New
+  Shield, // New
+} from "lucide-react";
 import L from "leaflet";
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
@@ -31,7 +35,6 @@ let DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// --- NEW: RED CAMPUS ICON ---
 const campusIcon = new L.Icon({
   iconUrl:
     "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
@@ -57,7 +60,9 @@ const PropertyDetail = () => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [reviewStatus, setReviewStatus] = useState("");
+
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState(null);
 
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState("fake");
@@ -88,7 +93,7 @@ const PropertyDetail = () => {
       .then((res) => {
         setProperty(res.data);
         if (res.data.images && res.data.images.length > 0)
-          setActiveImage(res.data.images[0].image);
+          setActiveImage(res.data.images[0]); // Whole image object
         if (res.data.latitude && res.data.longitude)
           setDistance(
             calculateDistance(
@@ -195,48 +200,69 @@ const PropertyDetail = () => {
           >
             <ArrowLeft size={20} className="mr-2" /> Back to listings
           </Link>
+
+          {/* --- IMAGE GRID WITH BADGES --- */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[500px]">
             <div className="lg:col-span-2 h-full relative rounded-2xl overflow-hidden bg-black">
               {activeImage ? (
-                <img
-                  src={activeImage}
-                  className="w-full h-full object-contain"
-                />
+                <>
+                  <img
+                    src={activeImage.image}
+                    className="w-full h-full object-contain"
+                  />
+                  {activeImage.room_label && (
+                    <div className="absolute top-4 left-4 bg-primary/90 backdrop-blur-sm text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow-lg border border-white/20">
+                      {activeImage.room_label}
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-500">
                   No Images
                 </div>
               )}
             </div>
+
             <div className="hidden lg:flex flex-col gap-4 h-full overflow-y-auto pr-2 custom-scrollbar">
               {property.images &&
                 property.images.map((img, index) => (
                   <button
                     key={index}
-                    onClick={() => setActiveImage(img.image)}
-                    className={`relative h-32 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all ${activeImage === img.image ? "border-primary ring-2 ring-primary/50" : "border-transparent opacity-70 hover:opacity-100"}`}
+                    onClick={() => setActiveImage(img)}
+                    className={`relative h-32 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all ${activeImage?.image === img.image ? "border-primary ring-2 ring-primary/50" : "border-transparent opacity-70 hover:opacity-100"}`}
                   >
                     <img
                       src={img.image}
                       className="w-full h-full object-cover"
                     />
+                    {img.room_label && (
+                      <div className="absolute bottom-1 left-1 bg-black/70 text-white text-[10px] font-bold px-2 py-0.5 rounded truncate max-w-[90%]">
+                        {img.room_label}
+                      </div>
+                    )}
                   </button>
                 ))}
             </div>
           </div>
+
           <div className="lg:hidden flex gap-2 overflow-x-auto mt-4 pb-2">
             {property.images &&
               property.images.map((img, index) => (
                 <button
                   key={index}
-                  onClick={() => setActiveImage(img.image)}
-                  className={`w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 ${activeImage === img.image ? "border-primary" : "border-transparent"}`}
+                  onClick={() => setActiveImage(img)}
+                  className={`relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden border-2 ${activeImage?.image === img.image ? "border-primary" : "border-transparent"}`}
                 >
                   <img
                     src={img.image}
                     alt="View"
                     className="w-full h-full object-cover"
                   />
+                  {img.room_label && (
+                    <div className="absolute bottom-1 left-1 bg-black/70 text-white text-[10px] font-bold px-1.5 py-0.5 rounded truncate max-w-[90%]">
+                      {img.room_label}
+                    </div>
+                  )}
                 </button>
               ))}
           </div>
@@ -298,6 +324,7 @@ const PropertyDetail = () => {
 
               <hr className="my-6 border-gray-100" />
 
+              {/* HOST INFO */}
               <div className="mb-8 bg-blue-50/50 rounded-2xl p-6 border border-blue-100 flex flex-col sm:flex-row gap-6 items-start">
                 <div className="w-20 h-20 rounded-full bg-blue-200 border-4 border-white shadow-md overflow-hidden flex-shrink-0 flex items-center justify-center">
                   {property.landlord_profile_picture ? (
@@ -318,10 +345,10 @@ const PropertyDetail = () => {
                     {property.landlord_bio ||
                       "This landlord hasn't added a bio yet. They are verified by CampusAcc."}
                   </p>
-                  {/* --- FIXED: PHONE NUMBER BLOCK COMPLETELY REMOVED --- */}
                 </div>
               </div>
 
+              {/* DESCRIPTION */}
               <div className="mb-8">
                 <h3 className="text-xl font-bold text-gray-900 mb-3">
                   About this place
@@ -331,7 +358,71 @@ const PropertyDetail = () => {
                 </p>
               </div>
 
-              {/* --- FIXED: AMENITIES REMOVED & TITLE CHANGED --- */}
+              {/* --- NEW: AMENITIES & RULES GRID --- */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">
+                  Amenities & Rules
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div
+                    className={`flex flex-col items-center justify-center p-4 rounded-xl border ${property.has_wifi ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-gray-50 border-gray-100 text-gray-400"}`}
+                  >
+                    <Wifi size={24} className="mb-2" />
+                    <span className="text-sm font-bold">
+                      {property.has_wifi ? "Free Wi-Fi" : "No Wi-Fi"}
+                    </span>
+                  </div>
+
+                  <div
+                    className={`flex flex-col items-center justify-center p-4 rounded-xl border ${property.has_solar ? "bg-orange-50 border-orange-200 text-orange-700" : "bg-gray-50 border-gray-100 text-gray-400"}`}
+                  >
+                    <Sun size={24} className="mb-2" />
+                    <span className="text-sm font-bold">
+                      {property.has_solar ? "Solar / Backup" : "No Solar"}
+                    </span>
+                  </div>
+
+                  <div
+                    className={`flex flex-col items-center justify-center p-4 rounded-xl border ${property.has_borehole ? "bg-cyan-50 border-cyan-200 text-cyan-700" : "bg-gray-50 border-gray-100 text-gray-400"}`}
+                  >
+                    <Droplets size={24} className="mb-2" />
+                    <span className="text-sm font-bold">
+                      {property.has_borehole ? "Water Backup" : "No Borehole"}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col items-center justify-center p-4 rounded-xl border bg-gray-50 border-gray-200 text-gray-700">
+                    <Clock size={24} className="mb-2 text-primary" />
+                    <span className="text-sm font-bold">
+                      {property.curfew
+                        ? `Curfew: ${property.curfew}`
+                        : "No Curfew"}
+                    </span>
+                  </div>
+
+                  <div
+                    className={`flex flex-col items-center justify-center p-4 rounded-xl border ${property.visitors_allowed ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700"}`}
+                  >
+                    <Users size={24} className="mb-2" />
+                    <span className="text-sm font-bold">
+                      {property.visitors_allowed
+                        ? "Visitors Allowed"
+                        : "No Visitors"}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col items-center justify-center p-4 rounded-xl border bg-gray-50 border-gray-200 text-gray-700">
+                    <Shield size={24} className="mb-2 text-primary" />
+                    <span className="text-sm font-bold">
+                      {parseFloat(property.deposit_amount) > 0
+                        ? `Deposit: $${property.deposit_amount}`
+                        : "No Deposit"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* TENANT REQ */}
               <div className="mb-8">
                 <h3 className="text-xl font-bold text-gray-900 mb-4">
                   Tenant Requirements
@@ -356,6 +447,7 @@ const PropertyDetail = () => {
                 </div>
               </div>
 
+              {/* MAP */}
               <div className="mb-8">
                 <h3 className="text-xl font-bold text-gray-900 mb-4">
                   Location
@@ -373,7 +465,6 @@ const PropertyDetail = () => {
                       >
                         <Popup>{property.title}</Popup>
                       </Marker>
-                      {/* --- FIXED: RED CAMPUS MARKER --- */}
                       <Marker position={[UNI_LAT, UNI_LNG]} icon={campusIcon}>
                         <Popup>
                           <b>NUST Campus</b>
@@ -388,6 +479,7 @@ const PropertyDetail = () => {
                 </div>
               </div>
 
+              {/* REVIEWS */}
               <div>
                 <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                   <Star className="fill-yellow-400 text-yellow-400" />
@@ -485,13 +577,59 @@ const PropertyDetail = () => {
               </div>
 
               <div className="space-y-4">
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  disabled={!property.is_available}
-                  className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all ${property.is_available ? "bg-primary hover:bg-blue-700 text-white shadow-blue-500/30" : "bg-gray-300 cursor-not-allowed text-gray-500"}`}
-                >
-                  {property.is_available ? "Request to Book" : "Not Available"}
-                </button>
+                <div className="mb-6">
+                  <h4 className="font-bold text-gray-900 mb-3 uppercase text-sm tracking-wide">
+                    Available Rooms
+                  </h4>
+                  {property.rooms && property.rooms.length > 0 ? (
+                    <div className="space-y-3">
+                      {property.rooms.map((room) => (
+                        <div
+                          key={room.id}
+                          className={`p-3 rounded-xl border ${room.is_available ? "border-gray-200 bg-white hover:border-primary" : "border-gray-100 bg-gray-50"} flex justify-between items-center transition-all`}
+                        >
+                          <div>
+                            <p
+                              className={`font-bold ${room.is_available ? "text-gray-900" : "text-gray-400"}`}
+                            >
+                              {room.label}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {room.capacity}{" "}
+                              {room.capacity === 1 ? "Person" : "People"} Max
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setSelectedRoom(room);
+                              setIsModalOpen(true);
+                            }}
+                            disabled={!room.is_available}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm ${room.is_available ? "bg-primary text-white hover:bg-blue-700 shadow-blue-500/30" : "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"}`}
+                          >
+                            {room.is_available ? "Select" : "Full"}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 text-center">
+                      <p className="text-sm text-gray-500 italic mb-3">
+                        Specific rooms not listed.
+                      </p>
+                      <button
+                        onClick={() => {
+                          setSelectedRoom(null);
+                          setIsModalOpen(true);
+                        }}
+                        disabled={!property.is_available}
+                        className="w-full py-3 bg-primary hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-500/30"
+                      >
+                        Request General Info
+                      </button>
+                    </div>
+                  )}
+                </div>
 
                 <a
                   href={whatsappUrl}
@@ -515,6 +653,7 @@ const PropertyDetail = () => {
                     : "Save to Wishlist"}
                 </button>
 
+                {/* REPORT BUTTON */}
                 <div className="pt-6 border-t border-gray-100 mt-6">
                   <button
                     onClick={() => setIsReportModalOpen(true)}
@@ -531,10 +670,14 @@ const PropertyDetail = () => {
 
       <BookingModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedRoom(null);
+        }}
         propertyId={property.id}
         propertyTitle={property.title}
         price={property.price_per_month}
+        room={selectedRoom}
       />
 
       {isReportModalOpen && (

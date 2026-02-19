@@ -9,6 +9,7 @@ import {
   Map as MapIcon,
   Heart,
   Star,
+  BedDouble,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
@@ -25,7 +26,6 @@ let DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// --- NEW: RED CAMPUS ICON ---
 const campusIcon = new L.Icon({
   iconUrl:
     "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
@@ -47,13 +47,14 @@ const Listings = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState("list");
 
-  // --- NEW: ADDED maxDistance STATE ---
+  // --- FILTER STATE ---
   const [filters, setFilters] = useState({
     maxPrice: 500,
     search: "",
     onlyAvailable: false,
     gender: "All",
     maxDistance: 100,
+    roomType: "Any", // Stores "1", "2", "3", "4", or "5+"
   });
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -108,6 +109,8 @@ const Listings = () => {
 
   useEffect(() => {
     let result = properties;
+
+    // 1. Text Search
     if (filters.search) {
       const term = filters.search.toLowerCase();
       result = result.filter(
@@ -116,19 +119,45 @@ const Listings = () => {
           p.address.toLowerCase().includes(term),
       );
     }
+
+    // 2. Price Filter
     result = result.filter(
       (p) => parseFloat(p.price_per_month) <= filters.maxPrice,
     );
+
+    // 3. Availability Filter
     if (filters.onlyAvailable) result = result.filter((p) => p.is_available);
+
+    // 4. Gender Filter
     if (filters.gender !== "All")
       result = result.filter((p) => p.gender_preference === filters.gender);
 
-    // --- NEW: DISTANCE FILTER LOGIC ---
+    // 5. Distance Filter
     result = result.filter(
       (p) =>
         !p.calculatedDistance ||
         parseFloat(p.calculatedDistance) <= filters.maxDistance,
     );
+
+    // 6. --- NEW: GRANULAR ROOM CAPACITY FILTER ---
+    if (filters.roomType !== "Any") {
+      result = result.filter((p) => {
+        // If property has no specific rooms listed, filter it out when searching for specific sizes
+        if (!p.rooms || p.rooms.length === 0) return false;
+
+        const targetSize = filters.roomType; // "1", "2", "3", "4", "5+"
+
+        if (targetSize === "5+") {
+          // Look for room with 5 or more people
+          return p.rooms.some((r) => r.capacity >= 5 && r.is_available);
+        } else {
+          // Look for exact match (e.g. exactly 2 people)
+          return p.rooms.some(
+            (r) => r.capacity === parseInt(targetSize) && r.is_available,
+          );
+        }
+      });
+    }
 
     setFilteredProperties(result);
   }, [filters, properties]);
@@ -198,7 +227,7 @@ const Listings = () => {
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-24">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                  <Filter size={100} /> Filters
+                  <Filter size={20} /> Filters
                 </h3>
                 <button
                   onClick={() =>
@@ -208,6 +237,7 @@ const Listings = () => {
                       onlyAvailable: false,
                       gender: "All",
                       maxDistance: 100,
+                      roomType: "Any",
                     })
                   }
                   className="text-xs text-primary font-medium hover:underline"
@@ -259,7 +289,6 @@ const Listings = () => {
                 />
               </div>
 
-              {/* --- NEW: DISTANCE SLIDER --- */}
               <div className="mb-6">
                 <div className="flex justify-between mb-2">
                   <label className="text-sm font-medium text-gray-700">
@@ -280,6 +309,27 @@ const Listings = () => {
                   }
                   className="w-full h-2 bg-gray-200 rounded-lg accent-primary"
                 />
+              </div>
+
+              {/* --- NEW: GRANULAR ROOM FILTER --- */}
+              <div className="mb-6">
+                <label className="text-sm font-medium text-gray-700 block mb-2 flex items-center gap-1">
+                  <BedDouble size={14} /> Room Capacity
+                </label>
+                <select
+                  value={filters.roomType}
+                  onChange={(e) =>
+                    handleFilterChange("roomType", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none bg-white focus:ring-2 focus:ring-primary"
+                >
+                  <option value="Any">Any Capacity</option>
+                  <option value="1">1 Person (Single)</option>
+                  <option value="2">2 People</option>
+                  <option value="3">3 People</option>
+                  <option value="4">4 People</option>
+                  <option value="5+">More than 4</option>
+                </select>
               </div>
 
               <div className="mb-6">
@@ -426,7 +476,6 @@ const Listings = () => {
                     >
                       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-                      {/* --- NEW: RED CAMPUS MARKER --- */}
                       <Marker position={[NUST_LAT, NUST_LNG]} icon={campusIcon}>
                         <Popup>
                           <b>NUST Campus</b>

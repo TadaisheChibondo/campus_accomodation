@@ -9,13 +9,16 @@ const BookingModal = ({
   propertyId,
   propertyTitle,
   price,
+  room, // <--- NEW PROP
 }) => {
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const [formData, setFormData] = useState({
     move_in_date: "",
     message: "",
   });
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState("idle"); // idle, success, error
+  const [status, setStatus] = useState("idle");
 
   if (!isOpen) return null;
 
@@ -31,18 +34,31 @@ const BookingModal = ({
     }
 
     try {
-      // Adjust this URL to match your actual Django backend endpoint
+      const profileRes = await axios.get(`${API_URL}/api/user/info/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!profileRes.data.phone_number) {
+        alert(
+          "Hold up! You need to add a Phone Number to your profile before landlords can accept your requests.",
+        );
+        window.location.href = "/profile";
+        return;
+      }
+
+      // --- SEND THE ROOM ID TO DJANGO ---
       await axios.post(
-        import.meta.env.VITE_API_URL + "/api/bookings/",
+        `${API_URL}/api/bookings/`,
         {
           property: propertyId,
+          room: room ? room.id : null, // <--- Attach Room ID here!
           move_in_date: formData.move_in_date,
           message: formData.message,
         },
         { headers: { Authorization: `Bearer ${token}` } },
       );
+
       setStatus("success");
-      // Close modal after 2 seconds
       setTimeout(() => {
         onClose();
         setStatus("idle");
@@ -59,7 +75,6 @@ const BookingModal = ({
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-        {/* Backdrop (Dark Overlay) */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -68,14 +83,12 @@ const BookingModal = ({
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         />
 
-        {/* Modal Card */}
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden z-10"
         >
-          {/* Header */}
           <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
             <div>
               <h3 className="text-lg font-bold text-gray-900">
@@ -83,6 +96,12 @@ const BookingModal = ({
               </h3>
               <p className="text-xs text-gray-500 truncate max-w-[200px]">
                 {propertyTitle}
+                {/* --- SHOW ROOM IN TITLE --- */}
+                {room && (
+                  <span className="text-primary font-bold ml-1">
+                    • {room.label}
+                  </span>
+                )}
               </p>
             </div>
             <button
@@ -93,7 +112,6 @@ const BookingModal = ({
             </button>
           </div>
 
-          {/* Body */}
           <div className="p-6">
             {status === "success" ? (
               <div className="text-center py-8">
@@ -107,7 +125,6 @@ const BookingModal = ({
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Date Input */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Move-in Date
@@ -132,7 +149,6 @@ const BookingModal = ({
                   </div>
                 </div>
 
-                {/* Message Input */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Message to Landlord
@@ -154,7 +170,6 @@ const BookingModal = ({
                   </div>
                 </div>
 
-                {/* Price Summary */}
                 <div className="bg-blue-50 p-4 rounded-xl flex justify-between items-center text-blue-900 text-sm">
                   <span className="font-medium">Total Rent</span>
                   <span className="font-bold text-lg">${price}/mo</span>

@@ -13,6 +13,7 @@ import {
   BookOpen,
   GraduationCap,
   Phone,
+  BedDouble, // New icon for rooms
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -21,7 +22,6 @@ const LandlordDashboard = () => {
   const [myProperties, setMyProperties] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // --- NEW: CLEAN API VARIABLE ---
   const API_URL = import.meta.env.VITE_API_URL;
 
   // FETCH DATA
@@ -50,9 +50,10 @@ const LandlordDashboard = () => {
       }
     };
     fetchData();
-  }, [API_URL]); // Added API_URL to dependency array for best practices
+  }, [API_URL]);
 
-  // HANDLE BOOKING ACCEPT/REJECT
+  // --- HANDLERS ---
+
   const handleStatusUpdate = async (bookingId, newStatus) => {
     const token = localStorage.getItem("access_token");
     try {
@@ -67,19 +68,17 @@ const LandlordDashboard = () => {
         ),
       );
     } catch (err) {
-      alert("Failed to update status. Check your connection.");
+      alert("Failed to update status.");
     }
   };
 
-  // HANDLE PROPERTY DELETE
   const handleDeleteProperty = async (propertyId) => {
     if (
       !window.confirm(
-        "Are you sure you want to delete this property? This action cannot be undone.",
+        "Are you sure you want to delete this property? This will delete all rooms inside it too.",
       )
     )
       return;
-
     const token = localStorage.getItem("access_token");
     try {
       await axios.delete(`${API_URL}/api/properties/${propertyId}/`, {
@@ -91,8 +90,7 @@ const LandlordDashboard = () => {
     }
   };
 
-  // HANDLE TOGGLE AVAILABILITY
-  const handleToggleAvailability = async (propertyId, currentStatus) => {
+  const handleToggleProperty = async (propertyId, currentStatus) => {
     const token = localStorage.getItem("access_token");
     try {
       await axios.patch(
@@ -106,7 +104,37 @@ const LandlordDashboard = () => {
         ),
       );
     } catch (err) {
-      alert("Failed to update availability.");
+      alert("Failed to update property status.");
+    }
+  };
+
+  // --- NEW: TOGGLE SPECIFIC ROOM ---
+  const handleToggleRoom = async (propertyId, roomId, currentStatus) => {
+    const token = localStorage.getItem("access_token");
+    try {
+      await axios.patch(
+        `${API_URL}/api/rooms/${roomId}/`,
+        { is_available: !currentStatus },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      // Deep update the nested state
+      setMyProperties((prev) =>
+        prev.map((p) => {
+          if (p.id === propertyId) {
+            return {
+              ...p,
+              rooms: p.rooms.map((r) =>
+                r.id === roomId ? { ...r, is_available: !currentStatus } : r,
+              ),
+            };
+          }
+          return p;
+        }),
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update room status.");
     }
   };
 
@@ -120,6 +148,7 @@ const LandlordDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 pt-8 pb-12 px-4">
       <div className="max-w-6xl mx-auto">
+        {/* HEADER */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
@@ -138,7 +167,7 @@ const LandlordDashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* LEFT COLUMN: INCOMING REQUESTS */}
+          {/* LEFT COL: BOOKING REQUESTS */}
           <div className="lg:col-span-2 space-y-6">
             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
               <User size={20} className="text-primary" /> Incoming Requests
@@ -164,11 +193,16 @@ const LandlordDashboard = () => {
                       <h3 className="font-bold text-lg text-gray-900">
                         {req.student_name || "Student"}
                       </h3>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 flex items-center flex-wrap gap-2 mt-1">
                         wants to book{" "}
-                        <span className="text-primary font-medium">
+                        <span className="text-primary font-bold">
                           {req.property_title}
                         </span>
+                        {req.room_label && (
+                          <span className="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-md text-xs font-bold shadow-sm">
+                            {req.room_label}
+                          </span>
+                        )}
                       </p>
                     </div>
                     <div
@@ -178,32 +212,22 @@ const LandlordDashboard = () => {
                     </div>
                   </div>
 
-                  {/* STUDENT PROFILE INFO DISPLAY */}
                   <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="bg-blue-50/50 p-3 rounded-xl border border-blue-100 flex items-center gap-2">
                       <BookOpen size={16} className="text-blue-600" />
-                      <span
-                        className="text-sm font-medium text-blue-900 truncate"
-                        title={req.student_program}
-                      >
+                      <span className="text-sm font-medium text-blue-900 truncate">
                         {req.student_program || "No program"}
                       </span>
                     </div>
                     <div className="bg-blue-50/50 p-3 rounded-xl border border-blue-100 flex items-center gap-2">
                       <GraduationCap size={16} className="text-blue-600" />
-                      <span
-                        className="text-sm font-medium text-blue-900 truncate"
-                        title={req.student_year}
-                      >
+                      <span className="text-sm font-medium text-blue-900 truncate">
                         {req.student_year || "No year"}
                       </span>
                     </div>
                     <div className="bg-blue-50/50 p-3 rounded-xl border border-blue-100 flex items-center gap-2">
                       <Phone size={16} className="text-blue-600" />
-                      <span
-                        className="text-sm font-medium text-blue-900 truncate"
-                        title={req.student_phone}
-                      >
+                      <span className="text-sm font-medium text-blue-900 truncate">
                         {req.student_phone || "No phone"}
                       </span>
                     </div>
@@ -247,12 +271,12 @@ const LandlordDashboard = () => {
             )}
           </div>
 
-          {/* RIGHT COLUMN: MY PROPERTIES */}
+          {/* RIGHT COL: MY PROPERTIES */}
           <div>
             <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
               <Home size={20} className="text-primary" /> My Properties
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-6">
               {myProperties.length === 0 ? (
                 <div className="text-gray-500 text-sm text-center py-8 bg-white rounded-xl border border-gray-100">
                   You haven't listed any properties yet.
@@ -261,57 +285,99 @@ const LandlordDashboard = () => {
                 myProperties.map((prop) => (
                   <div
                     key={prop.id}
-                    className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-3 group hover:border-primary transition-colors"
+                    className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
                   >
-                    <Link to={`/property/${prop.id}`} className="flex gap-3">
-                      <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                        {prop.images && prop.images.length > 0 ? (
-                          <img
-                            src={prop.images[0].image}
-                            className="w-full h-full object-cover"
-                            alt="Property"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
-                            No Img
+                    {/* PROPERTY MAIN CARD */}
+                    <div className="p-3 flex flex-col gap-3">
+                      <Link to={`/property/${prop.id}`} className="flex gap-3">
+                        <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                          {prop.images && prop.images.length > 0 ? (
+                            <img
+                              src={prop.images[0].image}
+                              className="w-full h-full object-cover"
+                              alt="Property"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
+                              No Img
+                            </div>
+                          )}
+                        </div>
+                        <div className="overflow-hidden flex flex-col justify-center">
+                          <h4 className="font-bold text-gray-900 truncate hover:text-primary transition-colors">
+                            {prop.title}
+                          </h4>
+                          <p className="text-sm text-gray-500 mb-1">
+                            ${prop.price_per_month}/mo
+                          </p>
+                          <div
+                            className={`text-xs font-bold ${prop.is_available ? "text-green-600" : "text-red-500"}`}
+                          >
+                            {prop.is_available
+                              ? "House Active"
+                              : "House Paused"}
                           </div>
-                        )}
-                      </div>
-                      <div className="overflow-hidden flex flex-col justify-center">
-                        <h4 className="font-bold text-gray-900 truncate group-hover:text-primary transition-colors">
-                          {prop.title}
-                        </h4>
-                        <p className="text-sm text-gray-500 mb-1">
-                          ${prop.price_per_month}/mo
-                        </p>
-                        <div
-                          className={`text-xs font-bold ${prop.is_available ? "text-green-600" : "text-red-500"}`}
-                        >
-                          {prop.is_available
-                            ? "Active & Listed"
-                            : "Marked as Taken"}
+                        </div>
+                      </Link>
+                    </div>
+
+                    {/* --- NEW: ROOM MANAGEMENT SECTION --- */}
+                    {prop.rooms && prop.rooms.length > 0 && (
+                      <div className="bg-gray-50 border-t border-gray-100 p-3">
+                        <h5 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                          <BedDouble size={12} /> Manage Rooms
+                        </h5>
+                        <div className="space-y-2">
+                          {prop.rooms.map((room) => (
+                            <div
+                              key={room.id}
+                              className="flex justify-between items-center bg-white p-2 rounded-lg border border-gray-100 shadow-sm"
+                            >
+                              <div className="flex flex-col">
+                                <span className="text-sm font-bold text-gray-700">
+                                  {room.label}
+                                </span>
+                                <span className="text-[10px] text-gray-400">
+                                  {room.capacity} Person(s)
+                                </span>
+                              </div>
+
+                              <button
+                                onClick={() =>
+                                  handleToggleRoom(
+                                    prop.id,
+                                    room.id,
+                                    room.is_available,
+                                  )
+                                }
+                                className={`px-2 py-1 rounded text-xs font-bold flex items-center gap-1 transition-colors ${room.is_available ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-red-100 text-red-700 hover:bg-red-200"}`}
+                              >
+                                <Power size={10} />
+                                {room.is_available ? "Open" : "Taken"}
+                              </button>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    </Link>
+                    )}
 
-                    <div className="flex border-t border-gray-100 pt-3 gap-2">
+                    {/* PROPERTY ACTIONS */}
+                    <div className="flex border-t border-gray-100 bg-gray-50/50">
                       <button
                         onClick={() =>
-                          handleToggleAvailability(prop.id, prop.is_available)
+                          handleToggleProperty(prop.id, prop.is_available)
                         }
-                        className={`flex-1 flex justify-center items-center gap-1 py-1.5 rounded-md text-xs font-bold transition-colors border ${
-                          prop.is_available
-                            ? "border-orange-200 text-orange-600 hover:bg-orange-50"
-                            : "border-green-200 text-green-600 hover:bg-green-50"
-                        }`}
+                        className={`flex-1 flex justify-center items-center gap-1 py-2 text-xs font-bold transition-colors ${prop.is_available ? "text-orange-600 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"}`}
                       >
                         <Power size={14} />{" "}
-                        {prop.is_available ? "Pause Listing" : "Relist"}
+                        {prop.is_available ? "Pause House" : "Relist House"}
                       </button>
+
+                      <div className="w-px bg-gray-200 my-1"></div>
 
                       <button
                         onClick={() => handleDeleteProperty(prop.id)}
-                        className="flex justify-center items-center gap-1 px-3 py-1.5 rounded-md text-xs font-bold border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                        className="flex-1 flex justify-center items-center gap-1 py-2 text-xs font-bold text-red-600 hover:bg-red-50 transition-colors"
                       >
                         <Trash2 size={14} /> Delete
                       </button>

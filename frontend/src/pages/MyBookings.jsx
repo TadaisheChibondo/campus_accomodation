@@ -8,7 +8,7 @@ import {
   XCircle,
   Home,
   ArrowRight,
-  Trash2, // <--- NEW ICON
+  Trash2,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -16,7 +16,6 @@ const MyBookings = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // --- NEW: CLEAN API VARIABLE ---
   const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
@@ -42,7 +41,6 @@ const MyBookings = () => {
     fetchBookings();
   }, [API_URL]);
 
-  // --- NEW: DELETE HANDLER ---
   const handleDeleteBooking = async (bookingId) => {
     if (
       !window.confirm(
@@ -57,7 +55,6 @@ const MyBookings = () => {
       await axios.delete(`${API_URL}/api/bookings/${bookingId}/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // Remove it from the screen instantly without reloading
       setBookings((prev) => prev.filter((b) => b.id !== bookingId));
     } catch (err) {
       console.error(err);
@@ -65,7 +62,6 @@ const MyBookings = () => {
     }
   };
 
-  // Helper for Status Badges
   const getStatusBadge = (status) => {
     const normalizedStatus = status ? status.toLowerCase() : "pending";
 
@@ -106,7 +102,6 @@ const MyBookings = () => {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : bookings.length === 0 ? (
-          // --- EMPTY STATE ---
           <div className="bg-white rounded-2xl p-10 text-center shadow-sm border border-gray-100">
             <div className="w-16 h-16 bg-blue-50 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
               <Home size={32} />
@@ -125,7 +120,6 @@ const MyBookings = () => {
             </Link>
           </div>
         ) : (
-          // --- BOOKING LIST ---
           <div className="space-y-4">
             {bookings.map((booking, index) => (
               <motion.div
@@ -136,10 +130,18 @@ const MyBookings = () => {
                 className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-col md:flex-row justify-between md:items-center gap-4"
               >
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
+                  {/* --- FIXED: CLEANED UP THE HEADER FLEXBOX --- */}
+                  <div className="flex items-center flex-wrap gap-3 mb-2">
                     <h3 className="text-lg font-bold text-gray-900">
                       {booking.property_title}
                     </h3>
+
+                    {booking.room_label && (
+                      <span className="text-xs font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md border border-blue-100">
+                        {booking.room_label}
+                      </span>
+                    )}
+
                     {getStatusBadge(booking.status)}
                   </div>
 
@@ -164,7 +166,6 @@ const MyBookings = () => {
                   )}
                 </div>
 
-                {/* --- NEW ACTION BUTTONS --- */}
                 <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-3 mt-4 md:mt-0 border-t md:border-t-0 pt-4 md:pt-0 border-gray-100">
                   <Link
                     to={`/property/${booking.property}`}

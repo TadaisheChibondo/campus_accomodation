@@ -15,7 +15,7 @@ from django.utils.encoding import force_bytes, force_str
 from django.core.mail import send_mail
 from django.conf import settings
 
-from .models import Property, PropertyImage, Review, Booking, Report, Profile
+from .models import Property, PropertyImage, Review, Booking, Report, Profile, Room
 from .serializers import (
     PropertySerializer, 
     PropertyImageSerializer, 
@@ -23,6 +23,7 @@ from .serializers import (
     UserSerializer, 
     ReviewSerializer,
     ProfileSerializer,
+    RoomSerializer,
 )
 
 # 1. PROPERTY VIEWSET
@@ -238,3 +239,17 @@ class PasswordResetConfirmView(APIView):
             return Response({"message": "Password has been reset successfully."})
         else:
             return Response({"error": "Invalid or expired reset link."}, status=400)
+        
+class RoomCreateView(generics.CreateAPIView):
+    queryset = Room.objects.all()
+    serializer_class = RoomSerializer
+    # Ensure only logged in users can create rooms
+    from rest_framework.permissions import IsAuthenticated
+    permission_classes = [IsAuthenticated]
+
+class RoomDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Room.objects.all()
+    serializer_class = RoomSerializer
+    from rest_framework.permissions import IsAuthenticated
+    permission_classes = [IsAuthenticated]
+
