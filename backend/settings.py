@@ -165,12 +165,16 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://campus-accomodation.vercel.app", 
+    "https://studenthousing.co.zw", # YOUR NEW DOMAIN
+    "https://www.studenthousing.co.zw", # NEW DOMAIN (WWW)
 ]
 
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "https://campus-accomodation.vercel.app",
+    "https://studenthousing.co.zw",
+    "https://www.studenthousing.co.zw",
 ]
 # backend/settings.py (at the bottom)
 
