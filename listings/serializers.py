@@ -10,21 +10,49 @@ UNI_LNG = 28.642
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     role = serializers.CharField(write_only=True, required=False) 
+    
+    # --- NEW: Catch all the extra profile data from the frontend ---
+    bio = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    phone_number = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    program = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    year_of_study = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    company_name = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'role'] 
+        # Make sure all new fields are added to the fields array!
+        fields = ['id', 'username', 'email', 'password', 'role', 'phone_number', 'program', 'year_of_study', 'company_name', 'bio'] 
 
     def create(self, validated_data):
+        # 1. "Pop" (extract and remove) the profile data so Django doesn't try to save it to the base User model
         role = validated_data.pop('role', 'student')
+        phone_number = validated_data.pop('phone_number', '')
+        program = validated_data.pop('program', '')
+        year_of_study = validated_data.pop('year_of_study', '')
+        company_name = validated_data.pop('company_name', '')
+        bio = validated_data.pop('bio', '')
+
+        # 2. Create the User (Because of your new signals.py, this instantly creates a blank Profile in the background!)
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data.get('email', ''),
             password=validated_data['password']
         )
+        
+        # 3. Fill in the newly created blank Profile with the data we popped earlier
         user.profile.role = role
+        user.profile.phone_number = phone_number
+        
+        if role == 'student':
+            user.profile.program = program
+            user.profile.year_of_study = year_of_study
+        elif role == 'landlord':
+            user.profile.company_name = company_name
+            user.profile.bio = bio
+            
         user.profile.save()
-        return user
+
+        return user  
     
 class PropertyImageSerializer(serializers.ModelSerializer):
     # --- NEW: Fetch the text label of the room ---

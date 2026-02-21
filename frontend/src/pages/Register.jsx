@@ -27,7 +27,7 @@ const Register = () => {
     year_of_study: "",
     company_name: "",
     bio: "",
-    termsAccepted: false, // <--- NEW: Ts & Cs Checkbox State
+    termsAccepted: false,
   });
 
   const [loading, setLoading] = useState(false);
@@ -46,15 +46,24 @@ const Register = () => {
     setError("");
 
     try {
-      // 2. REGISTER THE USER
-      await axios.post(`${API_URL}/api/register/`, {
+      // STEP 1: SEND ALL DATA IN ONE SINGLE PAYLOAD
+      const registerPayload = {
         username: formData.username,
         email: formData.email,
         password: formData.password,
         role: formData.role,
-      });
+        phone_number: formData.phone_number,
+        // Send role-specific data safely
+        program: formData.role === "student" ? formData.program : "",
+        year_of_study:
+          formData.role === "student" ? formData.year_of_study : "",
+        company_name: formData.role === "landlord" ? formData.company_name : "",
+        bio: formData.role === "landlord" ? formData.bio : "",
+      };
 
-      // 3. AUTO-LOGIN (Get Token)
+      await axios.post(`${API_URL}/api/register/`, registerPayload);
+
+      // STEP 2: AUTO-LOGIN (Get Token)
       const loginRes = await axios.post(`${API_URL}/api/token/`, {
         username: formData.username,
         password: formData.password,
@@ -63,34 +72,13 @@ const Register = () => {
       const accessToken = loginRes.data.access;
       const refreshToken = loginRes.data.refresh;
 
-      // 4. AUTO-UPDATE PROFILE DETAILS
-      // We use FormData here because your backend Profile endpoint expects it
-      const profilePayload = new FormData();
-      profilePayload.append("phone_number", formData.phone_number);
-
-      if (formData.role === "student") {
-        profilePayload.append("program", formData.program);
-        profilePayload.append("year_of_study", formData.year_of_study);
-      } else {
-        if (formData.company_name)
-          profilePayload.append("company_name", formData.company_name);
-        if (formData.bio) profilePayload.append("bio", formData.bio);
-      }
-
-      await axios.patch(`${API_URL}/api/user/info/`, profilePayload, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      // 5. SAVE TO STORAGE
+      // STEP 3: SAVE TO STORAGE & REDIRECT
       localStorage.setItem("access_token", accessToken);
       localStorage.setItem("refresh_token", refreshToken);
       localStorage.setItem("username", formData.username);
       localStorage.setItem("role", formData.role);
 
-      // 6. REDIRECT BASED ON ROLE
+      // REDIRECT BASED ON ROLE
       if (formData.role === "landlord") {
         navigate("/dashboard");
       } else {
@@ -101,7 +89,9 @@ const Register = () => {
       if (err.response && err.response.data.username) {
         setError("That username is already taken.");
       } else {
-        setError("Registration failed. Please check your connection.");
+        setError(
+          "Registration failed. Please check your connection or details.",
+        );
       }
     } finally {
       setLoading(false);
@@ -109,7 +99,6 @@ const Register = () => {
   };
 
   return (
-    // Added py-12 and my-8 so the taller form doesn't get cut off on small screens
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg border border-gray-100 my-8">
         <div className="text-center mb-8">
