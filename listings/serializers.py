@@ -22,6 +22,12 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'password', 'role', 'phone_number', 'program', 'year_of_study', 'company_name', 'bio'] 
 
+    # --- NEW: Custom validation to block spaces with a clear error ---
+    def validate_username(self, value):
+        if ' ' in value:
+            raise serializers.ValidationError("Usernames cannot contain spaces.")
+        return value
+
     def create(self, validated_data):
         # 1. "Pop" (extract and remove) the profile data
         role = validated_data.pop('role', 'student')
@@ -30,6 +36,16 @@ class UserSerializer(serializers.ModelSerializer):
         year_of_study = validated_data.pop('year_of_study', '')
         company_name = validated_data.pop('company_name', '')
         bio = validated_data.pop('bio', '')
+
+        # --- NEW: The +263 Auto-Formatter ---
+        if phone_number:
+            phone_number = phone_number.strip()
+            if phone_number.startswith('07'):
+                # Replace the '0' with '+263'
+                phone_number = '+263' + phone_number[1:]
+            elif phone_number.startswith('7'):
+                # Just add '+263'
+                phone_number = '+263' + phone_number
 
         user = None
 
@@ -73,13 +89,13 @@ class UserSerializer(serializers.ModelSerializer):
         user.profile.save()
 
         return user
+
 class PropertyImageSerializer(serializers.ModelSerializer):
-    # --- NEW: Fetch the text label of the room ---
+    # Fetch the text label of the room
     room_label = serializers.ReadOnlyField(source='room.label') 
 
     class Meta:
         model = PropertyImage
-        # --- FIXED: Add 'room_label' to the fields array ---
         fields = ['id', 'image', 'property', 'room', 'room_label']
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -98,7 +114,6 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = ['username', 'email', 'role', 'profile_picture', 'phone_number', 'program', 'year_of_study', 'bio', 'company_name']
 
 
-# --- NEW: ROOM SERIALIZER ---
 class RoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
@@ -117,8 +132,6 @@ class PropertySerializer(serializers.ModelSerializer):
     landlord_company = serializers.CharField(source='landlord.profile.company_name', read_only=True)
 
     is_favorited = serializers.SerializerMethodField()
-    
-    # --- NEW: NEST THE ROOMS INSIDE THE PROPERTY ---
     rooms = RoomSerializer(many=True, read_only=True)
 
     class Meta:
@@ -128,7 +141,7 @@ class PropertySerializer(serializers.ModelSerializer):
             'address', 'latitude', 'longitude', 'is_available', 'images', 
             'reviews', 'created_at', 'distance', 'gender_preference', 
             'landlord_profile_picture', 'landlord_phone', 'landlord_bio', 'landlord_company',
-            'is_favorited', 'rooms', # <--- ADDED 'rooms'
+            'is_favorited', 'rooms',
             'has_wifi', 'has_borehole', 'has_solar', 
             'curfew', 'visitors_allowed', 'deposit_amount',
         ]
@@ -161,19 +174,19 @@ class PropertySerializer(serializers.ModelSerializer):
 class BookingSerializer(serializers.ModelSerializer):
     student_name = serializers.ReadOnlyField(source='student.username')
     property_title = serializers.ReadOnlyField(source='property.title')
-    
-    # --- NEW: EXPOSE THE ROOM LABEL FOR THE DASHBOARDS ---
     room_label = serializers.ReadOnlyField(source='room.label')
-    
     student_program = serializers.ReadOnlyField(source='student.profile.program')
     student_year = serializers.ReadOnlyField(source='student.profile.year_of_study')
     student_phone = serializers.ReadOnlyField(source='student.profile.phone_number')
+    
+    # --- NEW: EXPOSE THE LANDLORD'S PHONE NUMBER ---
+    landlord_phone = serializers.ReadOnlyField(source='property.landlord.profile.phone_number')
 
     class Meta:
         model = Booking
         fields = [
             'id', 'property', 'property_title', 'room', 'room_label', 'student', 'student_name', 
-            'student_program', 'student_year', 'student_phone', 
+            'student_program', 'student_year', 'student_phone', 'landlord_phone', # <--- ADDED HERE
             'move_in_date', 'message', 'status', 'created_at'
         ]
         read_only_fields = ['student', 'created_at']

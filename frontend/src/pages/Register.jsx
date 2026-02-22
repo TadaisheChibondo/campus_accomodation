@@ -304,16 +304,13 @@ const Register = () => {
               />
               <span className="text-gray-600 text-sm leading-relaxed">
                 I agree to the{" "}
-                <Link
-                  to="#"
-                  className="text-primary hover:underline font-medium"
-                >
+                <Link to="/trust" className="text-blue-600 hover:underline">
                   Terms & Conditions
                 </Link>{" "}
                 and{" "}
                 <Link
-                  to="#"
-                  className="text-primary hover:underline font-medium"
+                  to="/trust"
+                  className="text-blue-600 hover:underline font-medium"
                 >
                   Privacy Policy
                 </Link>
