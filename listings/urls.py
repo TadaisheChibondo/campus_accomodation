@@ -11,10 +11,11 @@ from .views import (
     CreateReviewView,
     PropertyImageCreateView,
     UserInfoView,
-    RequestPasswordResetView,   # <--- ADD THIS
+    RequestPasswordResetView,
     PasswordResetConfirmView,
     RoomCreateView,
     RoomDetailView,
+    WhatsAppWebhookView,  # <--- NEW: Imported the Twilio webhook view
 )
 
 # 1. The Router handles all the standard "CRUD" URLs automatically
@@ -38,11 +39,17 @@ urlpatterns = [
     # Image Upload
     path('upload-image/', PropertyImageCreateView.as_view(), name='upload-image'),
 
-    # 4. User Info (FIXED: Changed dash to slash to match frontend!)
+    # 4. User Info 
     path('user/info/', UserInfoView.as_view(), name='user-info'),
+    
     # Password Reset
     path('password-reset/', RequestPasswordResetView.as_view(), name='password_reset'),
     path('password-reset-confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    
+    # Rooms
     path('rooms/', RoomCreateView.as_view(), name='create-room'),
     path('rooms/<int:pk>/', RoomDetailView.as_view(), name='room-detail'),
+    
+    # 5. WhatsApp Webhook (The Bot Endpoint)
+    path('whatsapp/', WhatsAppWebhookView.as_view(), name='whatsapp-webhook'),
 ]

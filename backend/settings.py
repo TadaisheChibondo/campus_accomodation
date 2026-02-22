@@ -256,3 +256,8 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'tadaishechibondo@gmail.com' 
 # Pull the password from the live server environment, not this file!
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_APP_PASSWORD', 'qccyplljflmmsefn')
+
+# --- TWILIO SETTINGS ---
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
+TWILIO_SANDBOX_NUMBER = os.environ.get('TWILIO_SANDBOX_NUMBER', 'whatsapp:+14155238886')

@@ -11,7 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     role = serializers.CharField(write_only=True, required=False) 
     
-    # --- NEW: Catch all the extra profile data from the frontend ---
+    # Catch all the extra profile data from the frontend
     bio = serializers.CharField(write_only=True, required=False, allow_blank=True)
     phone_number = serializers.CharField(write_only=True, required=False, allow_blank=True)
     program = serializers.CharField(write_only=True, required=False, allow_blank=True)
@@ -20,11 +20,10 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        # Make sure all new fields are added to the fields array!
         fields = ['id', 'username', 'email', 'password', 'role', 'phone_number', 'program', 'year_of_study', 'company_name', 'bio'] 
 
     def create(self, validated_data):
-        # 1. "Pop" (extract and remove) the profile data so Django doesn't try to save it to the base User model
+        # 1. "Pop" (extract and remove) the profile data
         role = validated_data.pop('role', 'student')
         phone_number = validated_data.pop('phone_number', '')
         program = validated_data.pop('program', '')
@@ -32,14 +31,35 @@ class UserSerializer(serializers.ModelSerializer):
         company_name = validated_data.pop('company_name', '')
         bio = validated_data.pop('bio', '')
 
-        # 2. Create the User (Because of your new signals.py, this instantly creates a blank Profile in the background!)
-        user = User.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data.get('email', ''),
-            password=validated_data['password']
-        )
+        user = None
+
+        # 2. THE UPGRADE BRIDGE: Check if a shadow account exists from WhatsApp
+        if phone_number:
+            # Ensure the format matches how the bot saved it
+            clean_phone = phone_number.replace('whatsapp:', '').strip()
+            
+            # The bot uses the phone number as the username
+            shadow_user = User.objects.filter(username=clean_phone).first()
+
+            if shadow_user:
+                # 💥 UPGRADE THE ACCOUNT 💥
+                # We overwrite the phone number username with their actual chosen username
+                shadow_user.username = validated_data['username']
+                shadow_user.email = validated_data.get('email', '')
+                shadow_user.set_password(validated_data['password'])
+                shadow_user.save()
+                
+                user = shadow_user
         
-        # 3. Fill in the newly created blank Profile with the data we popped earlier
+        # 3. NORMAL REGISTRATION: If no shadow account exists, create normally
+        if not user:
+            user = User.objects.create_user(
+                username=validated_data['username'],
+                email=validated_data.get('email', ''),
+                password=validated_data['password']
+            )
+        
+        # 4. Fill in the newly created (or upgraded) Profile with the data we popped earlier
         user.profile.role = role
         user.profile.phone_number = phone_number
         
@@ -52,8 +72,7 @@ class UserSerializer(serializers.ModelSerializer):
             
         user.profile.save()
 
-        return user  
-    
+        return user
 class PropertyImageSerializer(serializers.ModelSerializer):
     # --- NEW: Fetch the text label of the room ---
     room_label = serializers.ReadOnlyField(source='room.label') 
