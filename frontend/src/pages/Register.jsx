@@ -18,6 +18,8 @@ const Register = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
+    first_name: "",
+    last_name: "",
     username: "",
     email: "",
     password: "",
@@ -42,12 +44,20 @@ const Register = () => {
       return;
     }
 
+    // 2. Client-side Username Validation (Double protection)
+    if (formData.username.includes(" ")) {
+      setError("Usernames cannot contain spaces. Use a single word.");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
     try {
       // STEP 1: SEND ALL DATA IN ONE SINGLE PAYLOAD
       const registerPayload = {
+        first_name: formData.first_name,
+        last_name: formData.last_name,
         username: formData.username,
         email: formData.email,
         password: formData.password,
@@ -87,7 +97,9 @@ const Register = () => {
     } catch (err) {
       console.error(err);
       if (err.response && err.response.data.username) {
-        setError("That username is already taken.");
+        setError("That username is already taken. Please try another one.");
+      } else if (err.response && err.response.data.non_field_errors) {
+        setError(err.response.data.non_field_errors[0]);
       } else {
         setError(
           "Registration failed. Please check your connection or details.",
@@ -118,11 +130,48 @@ const Register = () => {
             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider border-b pb-2">
               Account Login
             </h3>
+
+            {/* --- NEW: First and Last Name --- */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="relative">
+                <User
+                  className="absolute left-3 top-3 text-gray-400"
+                  size={20}
+                />
+                <input
+                  type="text"
+                  placeholder="First Name"
+                  required
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
+                  value={formData.first_name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, first_name: e.target.value })
+                  }
+                />
+              </div>
+              <div className="relative">
+                <User
+                  className="absolute left-3 top-3 text-gray-400"
+                  size={20}
+                />
+                <input
+                  type="text"
+                  placeholder="Last Name"
+                  required
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
+                  value={formData.last_name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, last_name: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+
             <div className="relative">
               <User className="absolute left-3 top-3 text-gray-400" size={20} />
               <input
                 type="text"
-                placeholder="Username"
+                placeholder="Username (1 word, no spaces)"
                 required
                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
                 value={formData.username}
