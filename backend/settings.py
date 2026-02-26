@@ -253,9 +253,9 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
-EMAIL_HOST_USER = 'tadaishechibondo@gmail.com' 
+EMAIL_HOST_USER = 'studenthousingzim@gmail.com' 
 # Pull the password from the live server environment, not this file!
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_APP_PASSWORD', 'qccyplljflmmsefn')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_APP_PASSWORD', 'iacoeouygsgpyins')
 
 # --- TWILIO SETTINGS ---
 TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
