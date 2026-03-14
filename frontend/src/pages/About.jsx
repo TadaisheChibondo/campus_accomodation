@@ -7,6 +7,7 @@ import {
   Shield,
   TrendingUp,
   Terminal,
+  MessageCircle,
 } from "lucide-react";
 import profilePic from "../assets/profile.jpg";
 
@@ -130,6 +131,79 @@ const About = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* --- SECTION 3: SUPPORT & TEAM CONTACT --- */}
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-12">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+              Need Help? Contact the Team
+            </h2>
+            <p className="text-gray-500">
+              We are currently in Beta testing! If you encounter a bug, need
+              help booking a room, or just want to give feedback, chat directly
+              with the founders on WhatsApp.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Tadaishe */}
+            <a
+              href="https://wa.me/263789956550"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center p-6 bg-gray-50 rounded-2xl border border-gray-100 hover:border-[#25D366] hover:bg-green-50/30 transition-all group"
+            >
+              <div className="w-12 h-12 bg-green-100 text-[#25D366] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <MessageCircle size={24} />
+              </div>
+              <h3 className="font-bold text-gray-900 text-lg">
+                Tadaishe Chibondo
+              </h3>
+              <p className="text-sm text-gray-500 mb-4">Lead Developer</p>
+              <span className="text-[#25D366] font-semibold text-sm">
+                Chat on WhatsApp &rarr;
+              </span>
+            </a>
+
+            {/* Dennis */}
+            <a
+              href="https://wa.me/263782864934"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center p-6 bg-gray-50 rounded-2xl border border-gray-100 hover:border-[#25D366] hover:bg-green-50/30 transition-all group"
+            >
+              <div className="w-12 h-12 bg-green-100 text-[#25D366] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <MessageCircle size={24} />
+              </div>
+              <h3 className="font-bold text-gray-900 text-lg">
+                Dennis Mademutsa
+              </h3>
+              <p className="text-sm text-gray-500 mb-4">Operations & Support</p>
+              <span className="text-[#25D366] font-semibold text-sm">
+                Chat on WhatsApp &rarr;
+              </span>
+            </a>
+
+            {/* Thomas */}
+            <a
+              href="https://wa.me/263779313148"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center p-6 bg-gray-50 rounded-2xl border border-gray-100 hover:border-[#25D366] hover:bg-green-50/30 transition-all group"
+            >
+              <div className="w-12 h-12 bg-green-100 text-[#25D366] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <MessageCircle size={24} />
+              </div>
+              <h3 className="font-bold text-gray-900 text-lg">
+                Thomas Machando
+              </h3>
+              <p className="text-sm text-gray-500 mb-4">Student Outreach</p>
+              <span className="text-[#25D366] font-semibold text-sm">
+                Chat on WhatsApp &rarr;
+              </span>
+            </a>
           </div>
         </div>
       </div>
