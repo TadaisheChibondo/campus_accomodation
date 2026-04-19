@@ -95,8 +95,10 @@ PostgreSQL
 
 # Start the Vite development server
 
-npm run dev
-The application will be accessible at http://localhost:5173.
+```
+    npm run dev
+    The application will be accessible at http://localhost:5173.
+```
 
 📝 License
 This project is licensed under the MIT License - see the LICENSE file for details.
